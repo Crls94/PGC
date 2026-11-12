@@ -1,5 +1,17 @@
 # Frontend Web - Plataforma de Gestión de Conocimiento (Micro-SaaS)
 
+## Inicio local
+
+La pantalla de inicio está implementada con React y TypeScript. Consulta `GET /api/health` al abrir y permite comprobar nuevamente la conexión, con estados de carga, disponibilidad y error.
+
+1. En `backend/`, ejecutar `npm install` y `npm run dev` (puerto 4000).
+2. En `frontend/`, ejecutar `npm install` y `npm run dev -- --port 3000`.
+3. Abrir `http://127.0.0.1:3000`.
+
+`npm run build` verifica TypeScript y genera la versión de producción. La URL de la API se puede configurar con `VITE_API_URL` en `.env`, siguiendo `.env.example`. El endpoint actual no requiere PostgreSQL y solo verifica que el servidor responda.
+
+Las vistas descritas a continuación son la estructura prevista; todavía no están implementadas.
+
 Estructura modular en **React** diseñada para la interfaz de usuario de la plataforma colaborativa de gestión y versionado de documentos técnicos.
 
 ---
