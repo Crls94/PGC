@@ -86,7 +86,7 @@ export const documentService = {
       body: JSON.stringify(data),
     }),
 
-  actualizar: (id: string, data: { titulo?: string; contenido?: string; mensajeCambio?: string; estado?: string }) =>
+  actualizar: (id: string, data: { titulo?: string; contenido?: string; mensajeCambio?: string; estado?: string; versionEsperada?: number }) =>
     apiRequest<{ message: string; documento: Documento; version: VersionDocumento }>(`/documentos/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -106,15 +106,17 @@ export const documentService = {
       diferencias: Array<{ valor: string; agregado: boolean; eliminado: boolean; lineas: number }>;
     }>(`/documentos/${id}/diff?v1=${v1}&v2=${v2}`),
 
-  restaurarVersion: (id: string, versionId: string) =>
+  restaurarVersion: (id: string, versionId: string, versionEsperada?: number) =>
     apiRequest<{ message: string; documento: Documento; version: VersionDocumento }>(
       `/documentos/${id}/restaurar/${versionId}`,
-      { method: "POST" }
+      { method: "POST", body: JSON.stringify({ versionEsperada }) }
     ),
 };
 
 // 3. Servicios de Propuestas de Cambio (BPMN)
 export const proposalService = {
+  devolver: (id: string, comentarioRevision: string) => apiRequest<{ message: string; propuesta: PropuestaCambio }>(`/propuestas/${id}/devolver`, { method: 'PUT', body: JSON.stringify({ comentarioRevision }) }),
+  reenviar: (id: string, data: { contenidoPropuesto: string; mensaje: string; versionBase: number; baseRevisada: boolean }) => apiRequest<{ message: string; propuesta: PropuestaCambio }>(`/propuestas/${id}/reenviar`, { method: 'PUT', body: JSON.stringify(data) }),
   listar: (filtros?: { estado?: string; documentoId?: string }) => {
     const params = new URLSearchParams();
     if (filtros?.estado) params.append("estado", filtros.estado);

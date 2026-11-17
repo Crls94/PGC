@@ -4,7 +4,7 @@ export type Rol = 'ADMIN' | 'REVISOR' | 'ANALISTA';
 
 export type EstadoDocumento = 'BORRADOR' | 'EN_REVISION' | 'PUBLICADO' | 'OBSOLETO';
 
-export type EstadoPropuesta = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
+export type EstadoPropuesta = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DEVUELTA';
 
 export interface Usuario {
   id: string;

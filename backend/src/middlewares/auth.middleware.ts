@@ -50,7 +50,12 @@ export async function authenticateToken(
 
     next();
   } catch (error) {
-    res.status(403).json({ message: "Token inválido o expirado" });
+    if (error instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({ message: "Token inválido o expirado" });
+    } else {
+      console.error('Error al verificar sesión:', error);
+      res.status(500).json({ message: 'No se pudo verificar la sesión' });
+    }
     return;
   }
 }

@@ -1,4 +1,5 @@
 import { DocumentActions, TagSelector } from './Extras';
+import { Correction } from './Correction';
 import { useEffect, useState, type FormEvent } from 'react';
 import { ApiError, categoryService, documentService, proposalService } from './services/api';
 import type { Categoria, Documento, PropuestaCambio, Usuario, VersionDocumento } from './types';
@@ -130,7 +131,7 @@ export function DocumentWorkflow({ initial, user, fail }: Props & { initial: Doc
     </section>
     <section className="workflow-section"><h2>Propuestas de este documento</h2>
       {loaded && proposals.length === 0 && <p>No hay propuestas.</p>}
-      <ul>{proposals.map(p => <li key={p.id}>{p.estado} · Base: {p.versionBase ?? 'desconocida'} · {p.mensaje} · {p.autor?.nombre}{p.revisor && <> · Revisó: {p.revisor.nombre}</>}{p.comentarioRevision && <p>Comentario: {p.comentarioRevision}</p>}</li>)}</ul>
+      <ul>{proposals.map(p => <li key={p.id}>{p.estado} · Base: {p.versionBase ?? 'desconocida'} · {p.mensaje} · {p.autor?.nombre}{p.revisor && <> · Revisó: {p.revisor.nombre}</>}{p.comentarioRevision && <p>Comentario: {p.comentarioRevision}</p>}{p.estado === 'DEVUELTA' && p.autorId === user.id && <Correction proposal={p} fail={fail} done={refresh} />}</li>)}</ul>
     </section>
     <section className="workflow-section"><h2>Proponer cambio</h2>
       <p>Basado en la versión {base ?? '…'}. La revisión debe aprobarlo antes de cambiar el contenido vigente.</p>
@@ -176,7 +177,7 @@ export function ReviewInbox({ fail, user }: Props & { user: Usuario }) {
       setCurrent(d.documento); setVersion(v.versiones[0]?.numeroVersion ?? null); setSelected(p);
     } catch (e) { fail(e); } finally { setBusy(false); }
   }
-  async function decide(action: 'aprobar' | 'rechazar') {
+  async function decide(action: 'aprobar' | 'rechazar' | 'devolver') {
     if (!selected) return;
     setBusy(true); setNotice(''); setConflict('');
     try {
@@ -193,21 +194,27 @@ export function ReviewInbox({ fail, user }: Props & { user: Usuario }) {
   }
   const stale = selected && (selected.versionBase == null || selected.versionBase !== version);
   return <section className="status-card"><h1>Revisión de propuestas</h1>
-    <label>Estado<select value={filter} onChange={e => setFilter(e.target.value)}><option value="">Todos</option>{['PENDIENTE', 'APROBADA', 'RECHAZADA'].map(estado => <option key={estado} value={estado}>{estado}</option>)}</select></label>
+    <label>Estado<select value={filter} onChange={e => setFilter(e.target.value)}><option value="">Todos</option>{['PENDIENTE', 'DEVUELTA', 'APROBADA', 'RECHAZADA'].map(estado => <option key={estado} value={estado}>{estado}</option>)}</select></label>
     <label>Documento<select value={documentFilter} onChange={e => setDocumentFilter(e.target.value)}><option value="">Todos</option>{documents.map(documento => <option key={documento.id} value={documento.id}>{documento.titulo}</option>)}</select></label>
     <button className="secondary" disabled={busy || loading} onClick={() => void reload()}>Actualizar bandeja</button>
     {loading && <p role="status">Cargando propuestas…</p>}
     {busy && !selected && <p role="status">Cargando comparación o procesando decisión…</p>}
     {!loading && items.length === 0 && <p>No hay propuestas para esta consulta.</p>}
-    <ul className="results">{items.map(p => <li key={p.id}><strong>{p.documento?.titulo}</strong><p>{p.autor?.nombre} · {p.mensaje} · Base: {p.versionBase ?? 'desconocida'}</p>
+    <ul className="results">{items.map(p => <li key={p.id}><strong>{p.documento?.titulo}</strong><p>{p.estado} · {p.autor?.nombre} · {p.mensaje} · Base: {p.versionBase ?? 'desconocida'}</p>
       <button disabled={busy} onClick={() => void select(p)}>Comparar propuesta</button></li>)}</ul>
     {selected && current && <section className="workflow-section"><h2>Comparación: {current.titulo}</h2>
       <p>Motivo: {selected.mensaje}</p><div className="comparison"><div><h3>Vigente · versión {version}</h3><pre>{current.contenidoActual}</pre></div>
         <div><h3>Propuesto · base {selected.versionBase ?? 'desconocida'}</h3><pre>{selected.contenidoPropuesto}</pre></div></div>
-      {stale && <p role="alert" className="error">Propuesta desactualizada: no se puede aprobar. Se necesita una nueva sobre la versión vigente.</p>}
+      {stale && <p role="alert" className="error">La base es antigua o desconocida: no se puede aprobar. Si está DEVUELTA, su autor puede revisar el contenido vigente y confirmar una nueva base al reenviar.</p>}
+      {selected.comentarioRevision && <p>Observación de revisión: {selected.comentarioRevision}</p>}
+      {user.rol === 'ANALISTA' && <p>Solo REVISOR o ADMIN pueden aprobar, rechazar o devolver.</p>}
+      {selected.estado !== 'PENDIENTE' && <p>No se puede decidir: la propuesta está {selected.estado}. Las devueltas requieren corrección y reenvío del autor.</p>}
+      {selected.estado === 'DEVUELTA' && selected.autorId === user.id && <Correction key={selected.id} proposal={selected} fail={fail} done={reload} />}
       <label>Comentario de revisión<textarea value={comment} onChange={e => setComment(e.target.value)} rows={2} /></label>
       {user.rol !== "ANALISTA" && <div className="actions"><button disabled={busy || !!stale || selected.estado !== "PENDIENTE"} onClick={() => void decide('aprobar')}>{stale ? 'Aprobación bloqueada: base antigua' : busy ? 'Procesando…' : 'Aprobar propuesta'}</button>
-        <button className="secondary" disabled={busy || selected.estado !== "PENDIENTE"} onClick={() => void decide('rechazar')}>Rechazar propuesta</button></div>}
+        <button className="secondary" disabled={busy || selected.estado !== "PENDIENTE"} onClick={() => void decide('rechazar')}>Rechazar propuesta</button>
+        <button className="secondary" disabled={busy || selected.estado !== 'PENDIENTE' || !comment.trim()} onClick={() => void decide('devolver')}>Devolver para corrección</button></div>}
+      {user.rol !== 'ANALISTA' && selected.estado === 'PENDIENTE' && !comment.trim() && <p>Para devolver, escribe una observación obligatoria.</p>}
       <a href={`#/documentos/${current.id}`}>Abrir documento e historial</a>
     </section>}
     {notice && <p role="status">{notice}</p>}

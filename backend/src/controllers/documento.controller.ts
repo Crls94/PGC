@@ -4,6 +4,21 @@ import { AuthRequest } from "../middlewares/auth.middleware.js";
 import { EstadoDocumento, Prisma } from "@prisma/client";
 import { diffLines, Change } from "diff";
 
+
+class DocumentError extends Error { constructor(public status: number, message: string) { super(message); } }
+function documentError(res: Response, error: unknown) {
+  if (error instanceof DocumentError) { res.status(error.status).json({ message: error.message }); return; }
+  if (error instanceof Prisma.PrismaClientKnownRequestError && ['P2034', 'P2002'].includes(error.code)) {
+    res.status(409).json({ message: 'El documento cambi? durante la operaci?n. Recarga antes de continuar.' }); return;
+  }
+  console.error(error); res.status(500).json({ message: 'Error al modificar documento' });
+}
+function checkVersion(value: unknown, current: number) {
+  if (value === undefined) return;
+  if (!Number.isInteger(value) || Number(value) < 1) throw new DocumentError(400, 'versionEsperada debe ser un entero positivo');
+  if (value !== current) throw new DocumentError(409, 'El documento cambi?. Recarga la versi?n vigente antes de continuar.');
+}
+
 // 1. Listar documentos con filtros y búsqueda
 export async function listarDocumentos(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -142,7 +157,7 @@ export async function crearDocumento(req: AuthRequest, res: Response): Promise<v
         data: {
           titulo: String(titulo).trim(),
           contenidoActual: contenido,
-          estado: (estado as EstadoDocumento) || EstadoDocumento.BORRADOR,
+          estado: req.user!.rol === "ANALISTA" ? EstadoDocumento.BORRADOR : (estado as EstadoDocumento) || EstadoDocumento.BORRADOR,
           categoriaId: categoriaId ? String(categoriaId) : null,
           autorId,
         },
@@ -206,63 +221,22 @@ export async function crearDocumento(req: AuthRequest, res: Response): Promise<v
 export async function actualizarDocumento(req: AuthRequest, res: Response): Promise<void> {
   try {
     const id = String(req.params.id);
-    const { titulo, contenido, categoriaId, estado, mensajeCambio } = req.body;
-    const autorId = req.user!.id;
-
-    const docExistente = await prisma.documento.findUnique({
-      where: { id },
-      include: {
-        versiones: {
-          orderBy: { numeroVersion: "desc" },
-          take: 1,
-        },
-      },
-    });
-
-    if (!docExistente) {
-      res.status(404).json({ message: "Documento no encontrado" });
-      return;
-    }
-
-    const ultimaVersion = docExistente.versiones[0]?.numeroVersion || 1;
-    const nuevoNumeroVersion = ultimaVersion + 1;
-    const nuevoContenido = contenido !== undefined ? contenido : docExistente.contenidoActual;
-
-    const resultado = await prisma.$transaction(async (tx) => {
-      // Actualizar el documento principal
-      const docActualizado = await tx.documento.update({
-        where: { id },
-        data: {
-          titulo: titulo !== undefined ? String(titulo).trim() : docExistente.titulo,
-          contenidoActual: nuevoContenido,
-          categoriaId: categoriaId !== undefined ? (categoriaId ? String(categoriaId) : null) : docExistente.categoriaId,
-          estado: estado || docExistente.estado,
-        },
-      });
-
-      // Crear nueva versión en el historial
-      const nuevaVersion = await tx.version.create({
-        data: {
-          documentoId: id,
-          numeroVersion: nuevoNumeroVersion,
-          contenido: nuevoContenido,
-          mensajeCambio: mensajeCambio ? String(mensajeCambio).trim() : `Actualización a versión ${nuevoNumeroVersion}`,
-          autorId,
-        },
-      });
-
-      return { docActualizado, nuevaVersion };
-    });
-
-    res.json({
-      message: `Documento actualizado exitosamente. Se generó la versión ${nuevoNumeroVersion}`,
-      documento: resultado.docActualizado,
-      version: resultado.nuevaVersion,
-    });
-  } catch (error: any) {
-    console.error("Error al actualizar documento:", error);
-    res.status(500).json({ message: "Error al actualizar documento", error: error.message });
-  }
+    const { titulo, contenido, categoriaId, estado, mensajeCambio, versionEsperada } = req.body;
+    if (estado !== undefined && !Object.values(EstadoDocumento).includes(estado)) throw new DocumentError(400, 'Estado inv?lido');
+    const result = await prisma.$transaction(async tx => {
+      const doc = await tx.documento.findUnique({ where: { id }, include: { versiones: { orderBy: { numeroVersion: 'desc' }, take: 1 } } });
+      if (!doc) throw new DocumentError(404, 'Documento no encontrado');
+      if (doc.estado === 'BORRADOR' && doc.autorId !== req.user!.id && req.user!.rol !== 'ADMIN') throw new DocumentError(403, 'No puedes editar borradores de otro usuario');
+      if (req.user!.rol === 'ANALISTA' && (doc.estado === 'PUBLICADO' || estado === 'PUBLICADO')) throw new DocumentError(403, 'Publicar o editar directamente un documento publicado requiere REVISOR o ADMIN');
+      const current = doc.versiones[0]?.numeroVersion ?? 1;
+      checkVersion(versionEsperada, current);
+      const nextContent = contenido ?? doc.contenidoActual;
+      const documento = await tx.documento.update({ where: { id }, data: { titulo: titulo !== undefined ? String(titulo).trim() : doc.titulo, contenidoActual: nextContent, categoriaId: categoriaId !== undefined ? categoriaId || null : doc.categoriaId, estado: estado ?? doc.estado } });
+      const version = await tx.version.create({ data: { documentoId: id, numeroVersion: current + 1, contenido: nextContent, mensajeCambio: mensajeCambio || 'Actualizaci?n del documento', autorId: req.user!.id } });
+      return { documento, version };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    res.json({ message: 'Documento actualizado y nueva versi?n registrada', ...result });
+  } catch (error) { documentError(res, error); }
 }
 
 // 5. Eliminar documento
@@ -370,67 +344,19 @@ export async function compararVersiones(req: AuthRequest, res: Response): Promis
 // 8. Restaurar documento a una versión anterior
 export async function restaurarVersion(req: AuthRequest, res: Response): Promise<void> {
   try {
+    if (!['REVISOR', 'ADMIN'].includes(req.user!.rol)) throw new DocumentError(403, 'Restaurar requiere REVISOR o ADMIN');
     const id = String(req.params.id);
-    const versionId = String(req.params.versionId);
-    const autorId = req.user!.id;
-
-    const versionObjetivo = await prisma.version.findUnique({
-      where: { id: versionId },
-    });
-
-    if (!versionObjetivo || versionObjetivo.documentoId !== id) {
-      res.status(404).json({ message: "La versión especificada no existe para este documento" });
-      return;
-    }
-
-    const doc = await prisma.documento.findUnique({
-      where: { id },
-      include: {
-        versiones: {
-          orderBy: { numeroVersion: "desc" },
-          take: 1,
-        },
-      },
-    });
-
-    if (!doc) {
-      res.status(404).json({ message: "Documento no encontrado" });
-      return;
-    }
-
-    const ultimaVersion = doc.versiones[0]?.numeroVersion || 1;
-    const nuevoNumeroVersion = ultimaVersion + 1;
-
-    const resultado = await prisma.$transaction(async (tx) => {
-      // Actualiza contenido del documento con el contenido histórico
-      const docActualizado = await tx.documento.update({
-        where: { id },
-        data: {
-          contenidoActual: versionObjetivo.contenido,
-        },
-      });
-
-      // Registra una nueva versión de respaldo informando la restauración
-      const nuevaVersion = await tx.version.create({
-        data: {
-          documentoId: id,
-          numeroVersion: nuevoNumeroVersion,
-          contenido: versionObjetivo.contenido,
-          mensajeCambio: `Restauración a la versión ${versionObjetivo.numeroVersion}`,
-          autorId,
-        },
-      });
-
-      return { docActualizado, nuevaVersion };
-    });
-
-    res.json({
-      message: `Documento restaurado con éxito a la versión ${versionObjetivo.numeroVersion}. Se creó la versión ${nuevoNumeroVersion}`,
-      documento: resultado.docActualizado,
-      version: resultado.nuevaVersion,
-    });
-  } catch (error: any) {
-    console.error("Error al restaurar versión:", error);
-    res.status(500).json({ message: "Error al restaurar versión", error: error.message });
-  }
+    const result = await prisma.$transaction(async tx => {
+      const doc = await tx.documento.findUnique({ where: { id }, include: { versiones: { orderBy: { numeroVersion: 'desc' }, take: 1 } } });
+      if (!doc) throw new DocumentError(404, 'Documento no encontrado');
+      const target = await tx.version.findUnique({ where: { id: String(req.params.versionId) } });
+      if (!target || target.documentoId !== id) throw new DocumentError(404, 'Versi?n no encontrada para este documento');
+      const current = doc.versiones[0]?.numeroVersion ?? 1;
+      checkVersion(req.body?.versionEsperada, current);
+      const documento = await tx.documento.update({ where: { id }, data: { contenidoActual: target.contenido } });
+      const version = await tx.version.create({ data: { documentoId: id, numeroVersion: current + 1, contenido: target.contenido, mensajeCambio: 'Restauraci?n a la versi?n ' + target.numeroVersion, autorId: req.user!.id } });
+      return { documento, version };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    res.json({ message: 'Versi?n restaurada y nueva versi?n registrada', ...result });
+  } catch (error) { documentError(res, error); }
 }
