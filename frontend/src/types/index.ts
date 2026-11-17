@@ -4,7 +4,7 @@ export type Rol = 'ADMIN' | 'REVISOR' | 'ANALISTA';
 
 export type EstadoDocumento = 'BORRADOR' | 'EN_REVISION' | 'PUBLICADO' | 'OBSOLETO';
 
-export type EstadoPropuesta = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
+export type EstadoPropuesta = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DEVUELTA';
 
 export interface Usuario {
   id: string;
@@ -46,7 +46,8 @@ export interface Documento {
   categoria?: Categoria;
   autorId: string;
   autor?: Usuario;
-  etiquetas?: Etiqueta[];
+  etiquetas?: Array<Etiqueta | string>;
+  relaciones?: Array<{ id: string; titulo: string; estado: EstadoDocumento }>;
   versiones?: VersionDocumento[];
   creadoEn: string;
   actualizadoEn: string;
@@ -60,6 +61,8 @@ export interface PropuestaCambio {
   revisorId?: string;
   revisor?: Usuario;
   contenidoPropuesto: string;
+  versionBase: number | null;
+  documento?: { id: string; titulo: string; contenidoActual: string };
   mensaje: string;
   estado: EstadoPropuesta;
   comentarioRevision?: string;

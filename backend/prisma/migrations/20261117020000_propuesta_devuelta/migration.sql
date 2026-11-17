@@ -1,0 +1,1 @@
+ALTER TYPE "EstadoPropuesta" ADD VALUE 'DEVUELTA';

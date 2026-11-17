@@ -1,6 +1,65 @@
 # Auditoría y plan del frontend
 
+## Restricciones locales de permisos
+
+En `fix/api-permisos`, el registro público asigna siempre ANALISTA, incluido
+cuando el cliente solicita ADMIN o REVISOR. El servidor devuelve 403 al analista
+que intenta actualizar o restaurar directamente un documento cuyo estado vigente
+es PUBLICADO. La restricción también se aplica al autor del documento y a una
+actualización que intente cambiar primero su estado a BORRADOR.
+El analista puede enviar propuestas. Aprobar y rechazar siguen reservados a
+REVISOR y ADMIN.
+
+Queda pendiente acordar quién puede crear o publicar documentos, editar borradores
+y otros estados, y qué condiciones de autoría o rol autorizan las operaciones
+directas de edición y restauración de REVISOR y ADMIN. Esta entrega conserva el
+comportamiento previo fuera de la restricción explícita sobre ANALISTA y PUBLICADO,
+sin establecer una autorización de negocio para esos casos. La detección de
+propuestas desactualizadas corresponde a otra rama.
+
+Validación local repetida el 13 de noviembre de 2026 en
+`pgc_permissions_test_20261113`, creada separadamente en PostgreSQL 18 por el
+puerto 55433 (Docker no estaba disponible). Se aplicó la migración inicial y compiló el
+backend. La prueba HTTP verificó registros con roles privilegiados, inválido y
+omitido, persistencia como ANALISTA en BD, propuestas permitidas, edición y
+restauración denegadas sin crear versiones ni cambiar contenido, título o estado,
+revisión denegada al analista y
+aprobación y rechazo permitidos al revisor. El revisor se creó directamente en
+la base de prueba. La API de prueba se detiene al finalizar y sus datos se
+conservan en esa base. La instancia temporal de PostgreSQL se detuvo al finalizar;
+sus archivos están en `%TEMP%/pgc-permissions-20261113/data`.
+
+Al retomar el trabajo el mismo día, se repitieron la compilación y la prueba de
+integración: ambas pasaron (1 prueba, 0 fallos). La instancia temporal ya estaba
+ejecutándose y se conservó activa tras esta repetición. Windows requirió ejecutar
+la prueba fuera del sandbox para permitir la creación del proceso de la API.
+
+Para repetir, desde backend y con una base de prueba separada cuyo nombre comience
+con `pgc_permissions_test_`, configurar DATABASE_URL y ejecutar lo siguiente.
+La prueba crea registros nuevos en cada ejecución y utiliza el puerto 4003.
+
+```powershell
+npm run prisma:deploy
+npm run build
+node --test tests/permisos.integration.cjs
+```
+
 Verificación del 10 de noviembre de 2026. La API es Node.js con Express, TypeScript y Prisma sobre PostgreSQL 16. El [README del backend](../backend/README.md) contiene los comandos y el catálogo de rutas. Las vistas del [README del frontend](../frontend/README.md) describen el alcance previsto.
+
+Actualización local del 12 de noviembre de 2026 en `feature/api-entorno-local`.
+Se preparó `20261112000000_init` a partir del esquema existente. La migración se
+aplicó en `pgc_migration_test_20261112`, una base nueva separada de
+`gestion_conocimiento_db`, en el mismo PostgreSQL 16 de Docker publicado en 55432.
+Se verificaron cero tablas antes de aplicar, despliegue repetible sin migraciones
+pendientes y coincidencia exacta con el esquema Prisma mediante migrate diff.
+La instalación con npm ci desde caché, la generación del cliente y la compilación
+pasaron. La API compilada, configurada temporalmente en 4001, respondió HTTP 200
+en salud y categorías. Categorías devolvió un arreglo vacío tras consultar la base
+de prueba. Los conteos de usuarios, documentos y categorías de la base actual
+se mantuvieron en cero. Se conserva la base de prueba para inspección.
+El procedimiento vigente de instalación, variables, migraciones y arranque está
+en el README del backend, incluida la adopción de una base creada con db push.
+Los apartados siguientes conservan el registro de la auditoría inicial.
 
 ## Estado de Git y flujo
 

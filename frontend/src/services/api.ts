@@ -10,6 +10,10 @@ import {
 
 const API_BASE_URL = import.meta.env?.VITE_API_URL || "http://localhost:4000/api";
 
+export class ApiError extends Error {
+  constructor(message: string, public status: number) { super(message); }
+}
+
 export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -32,7 +36,7 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
-    throw new Error(errorBody.message || `Error HTTP ${response.status}`);
+    throw new ApiError(errorBody.message || `Error HTTP ${response.status}`, response.status);
   }
 
   return response.json();
@@ -82,7 +86,7 @@ export const documentService = {
       body: JSON.stringify(data),
     }),
 
-  actualizar: (id: string, data: { titulo?: string; contenido?: string; mensajeCambio?: string; estado?: string }) =>
+  actualizar: (id: string, data: { titulo?: string; contenido?: string; mensajeCambio?: string; estado?: string; versionEsperada?: number }) =>
     apiRequest<{ message: string; documento: Documento; version: VersionDocumento }>(`/documentos/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -102,15 +106,17 @@ export const documentService = {
       diferencias: Array<{ valor: string; agregado: boolean; eliminado: boolean; lineas: number }>;
     }>(`/documentos/${id}/diff?v1=${v1}&v2=${v2}`),
 
-  restaurarVersion: (id: string, versionId: string) =>
+  restaurarVersion: (id: string, versionId: string, versionEsperada?: number) =>
     apiRequest<{ message: string; documento: Documento; version: VersionDocumento }>(
       `/documentos/${id}/restaurar/${versionId}`,
-      { method: "POST" }
+      { method: "POST", body: JSON.stringify({ versionEsperada }) }
     ),
 };
 
 // 3. Servicios de Propuestas de Cambio (BPMN)
 export const proposalService = {
+  devolver: (id: string, comentarioRevision: string) => apiRequest<{ message: string; propuesta: PropuestaCambio }>(`/propuestas/${id}/devolver`, { method: 'PUT', body: JSON.stringify({ comentarioRevision }) }),
+  reenviar: (id: string, data: { contenidoPropuesto: string; mensaje: string; versionBase: number; baseRevisada: boolean }) => apiRequest<{ message: string; propuesta: PropuestaCambio }>(`/propuestas/${id}/reenviar`, { method: 'PUT', body: JSON.stringify(data) }),
   listar: (filtros?: { estado?: string; documentoId?: string }) => {
     const params = new URLSearchParams();
     if (filtros?.estado) params.append("estado", filtros.estado);
@@ -119,7 +125,7 @@ export const proposalService = {
     return apiRequest<{ total: number; propuestas: PropuestaCambio[] }>(`/propuestas${query}`);
   },
 
-  crear: (data: { documentoId: string; contenidoPropuesto: string; mensaje: string }) =>
+  crear: (data: { documentoId: string; contenidoPropuesto: string; mensaje: string; versionBase: number }) =>
     apiRequest<{ message: string; propuesta: PropuestaCambio }>("/propuestas", {
       method: "POST",
       body: JSON.stringify(data),
