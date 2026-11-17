@@ -24,6 +24,7 @@ enum EstadoPropuesta {
   PENDIENTE
   APROBADA
   RECHAZADA
+  DEVUELTA
 }
 
 model Usuario {
@@ -110,6 +111,7 @@ model PropuestaCambio {
   autorId            String          @map("autor_id")
   revisorId          String?         @map("revisor_id")
   contenidoPropuesto String          @db.Text @map("contenido_propuesto")
+  versionBase        Int?            @map("version_base")
   mensaje            String
   estado             EstadoPropuesta @default(PENDIENTE)
   comentarioRevision String?         @map("comentario_revision")

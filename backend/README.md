@@ -133,7 +133,7 @@ se detuvieron al terminar. El contenedor y su volumen se conservaron.
 ### 1. Autenticación (`/api/auth`)
 | Método | Endpoint | Descripción | Requiere Auth |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/api/auth/register` | Registro de usuario (`nombre`, `email`, `password`, `rol` opcional) | No |
+| `POST` | `/api/auth/register` | Registro de usuario (`nombre`, `email`, `password`). Siempre asigna ANALISTA e ignora el rol enviado | No |
 | `POST` | `/api/auth/login` | Inicio de sesión (`email`, `password`) -> devuelve `token` y `usuario` | No |
 | `GET` | `/api/auth/me` | Retorna el perfil del usuario autenticado | Sí |
 

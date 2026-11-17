@@ -10,7 +10,7 @@ const JWT_EXPIRES_IN = "24h";
 
 export async function register(req: Request, res: Response): Promise<void> {
   try {
-    const { nombre, email, password, rol } = req.body;
+    const { nombre, email, password } = req.body;
 
     if (!nombre || !email || !password) {
       res.status(400).json({ message: "Nombre, email y contraseña son obligatorios" });
@@ -30,18 +30,12 @@ export async function register(req: Request, res: Response): Promise<void> {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Asignar rol (validar contra enum Rol o por defecto ANALISTA)
-    let rolAsignado: Rol = Rol.ANALISTA;
-    if (rol && Object.values(Rol).includes(rol)) {
-      rolAsignado = rol;
-    }
-
     const nuevoUsuario = await prisma.usuario.create({
       data: {
         nombre: nombre.trim(),
         email: email.toLowerCase().trim(),
         password: passwordHash,
-        rol: rolAsignado,
+        rol: Rol.ANALISTA,
       },
       select: {
         id: true,
