@@ -1,3 +1,4 @@
+import { StateBadge } from './Visual';
 import { DocumentActions, TagSelector } from './Extras';
 import { Correction } from './Correction';
 import { useEffect, useState, type FormEvent } from 'react';
@@ -37,11 +38,11 @@ export function CreateDocument({ fail }: Props) {
       location.hash = `/documentos/${documento.id}`;
     } catch (e) { fail(e); } finally { setBusy(false); }
   }
-  return <section className="status-card"><h1>Crear documento</h1>
+  return <section className="status-card"><span className="eyebrow">BIBLIOTECA / NUEVO DOCUMENTO</span><h1>Crear documento</h1>
     <p>Se creará como borrador con su versión 1.</p>
     {loading && <p role="status">Cargando categorías…</p>}
     {categoryError && <p role="alert">No se pudieron cargar las categorías. Vuelve a esta pantalla para reintentar.</p>}
-    <form onSubmit={create}>
+    <div className="editor-layout"><form onSubmit={create}>
       <label>Título<input name="titulo" required maxLength={200} /></label>
       <label>Contenido<textarea name="contenido" required rows={8} /></label>
       <label>Categoría<select name="categoriaId" disabled={loading || categoryError}><option value="">Sin categoría</option>{categories.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}</select></label>
@@ -50,7 +51,7 @@ export function CreateDocument({ fail }: Props) {
       {!loading && relatedDocuments.length === 0 && <p>Aún no hay documentos para relacionar.</p>}
       {!loading && !categoryError && categories.length === 0 && <p>No hay categorías disponibles. Puedes crear el documento sin categoría.</p>}
       <button disabled={busy || loading || categoryError}>{busy ? 'Guardando…' : 'Guardar documento'}</button>
-    </form></section>;
+    </form><aside className="editor-help"><h2>Del borrador al conocimiento</h2><ol><li>Describe el proceso con claridad.</li><li>Organiza por categoría y etiquetas.</li><li>Relaciona documentos del equipo.</li></ol><p>El documento se guarda con su primera versión. Los cambios propuestos se revisan antes de aplicarse.</p></aside></div></section>;
 }
 
 export function DocumentWorkflow({ initial, user, fail }: Props & { initial: Documento; user: Usuario }) {
@@ -109,14 +110,14 @@ export function DocumentWorkflow({ initial, user, fail }: Props & { initial: Doc
     catch (e) { fail(e); } finally { setDiffLoading(false); }
   }
   return <>
-    <h1>{doc.titulo}</h1><p>{doc.estado} · {doc.autor?.nombre} · {doc.categoria?.nombre || 'Sin categoría'}</p>
+    <h1>{doc.titulo}</h1><div className="document-meta"><StateBadge state={doc.estado} /><span>{doc.autor?.nombre}</span><span>{doc.categoria?.nombre || 'Sin categoría'}</span></div>
     {!!doc.etiquetas?.length && <p>Etiquetas: {doc.etiquetas.map(e => typeof e === 'string' ? e : e.nombre).join(', ')}</p>}
     {!!doc.relaciones?.length && <p>Relacionados: {doc.relaciones.map((r, i) => <span key={r.id}>{i > 0 && ', '}<a href={`#/documentos/${r.id}`}>{r.titulo}</a></span>)}</p>}
-    <DocumentActions doc={doc} user={user} fail={fail} refresh={refresh} versions={versions} /><h2>Contenido vigente</h2><div className="document-content">{doc.contenidoActual}</div>
+    <DocumentActions doc={doc} user={user} fail={fail} refresh={refresh} versions={versions} /><div className="document-reading-grid"><section className="reading-panel"><h2>Contenido vigente</h2><div className="document-content">{doc.contenidoActual}</div>
     <button className="secondary" onClick={() => void refresh()} disabled={busy}>Actualizar documento e historial</button>
     {notice && <p role="status">{notice}</p>}
     {conflict && <p role="alert" className="error">{conflict}</p>}
-    <section className="workflow-section"><h2>Historial</h2>
+    </section><section className="workflow-section history-panel"><h2>Historial</h2>
       {!loaded && <p role="status">Cargando historial…</p>}
       {loaded && versions.length === 0 && <p>No hay versiones registradas.</p>}
       <ol className="history">{versions.map(v => <li key={v.id}><details><summary>Versión {v.numeroVersion} · {v.mensajeCambio}</summary>
@@ -129,9 +130,9 @@ export function DocumentWorkflow({ initial, user, fail }: Props & { initial: Doc
       </form>}
       {diff && <div role="status" className="diff-result"><h3>Versión {diff.versionOriginal} → {diff.versionComparada}</h3><pre>{diff.diferencias.map((part, i) => <span key={i} className={part.agregado ? 'diff-added' : part.eliminado ? 'diff-removed' : undefined}>{part.valor}</span>)}</pre></div>}
     </section>
-    <section className="workflow-section"><h2>Propuestas de este documento</h2>
+    </div><section className="workflow-section"><h2>Propuestas de este documento</h2>
       {loaded && proposals.length === 0 && <p>No hay propuestas.</p>}
-      <ul>{proposals.map(p => <li key={p.id}>{p.estado} · Base: {p.versionBase ?? 'desconocida'} · {p.mensaje} · {p.autor?.nombre}{p.revisor && <> · Revisó: {p.revisor.nombre}</>}{p.comentarioRevision && <p>Comentario: {p.comentarioRevision}</p>}{p.estado === 'DEVUELTA' && p.autorId === user.id && <Correction proposal={p} fail={fail} done={refresh} />}</li>)}</ul>
+      <ul className="document-proposals">{proposals.map(p => <li key={p.id}><StateBadge state={p.estado} /> · Base: {p.versionBase ?? 'desconocida'} · {p.mensaje} · {p.autor?.nombre}{p.revisor && <> · Revisó: {p.revisor.nombre}</>}{p.comentarioRevision && <p className="observation">Comentario: {p.comentarioRevision}</p>}{p.estado === 'DEVUELTA' && p.autorId === user.id && <Correction proposal={p} fail={fail} done={refresh} />}</li>)}</ul>
     </section>
     <section className="workflow-section"><h2>Proponer cambio</h2>
       <p>Basado en la versión {base ?? '…'}. La revisión debe aprobarlo antes de cambiar el contenido vigente.</p>
@@ -193,31 +194,31 @@ export function ReviewInbox({ fail, user }: Props & { user: Usuario }) {
     } finally { setBusy(false); }
   }
   const stale = selected && (selected.versionBase == null || selected.versionBase !== version);
-  return <section className="status-card"><h1>Revisión de propuestas</h1>
+  return <section className="status-card inbox-page"><div className="page-heading"><div><span className="eyebrow">CONTROL DE CALIDAD DOCUMENTAL</span><h1>Revisión de propuestas</h1><p>Compara el contenido y revisa cada cambio del equipo.</p></div><span className="badge">{items.length} propuestas en la consulta</span></div><div className="filter-bar">
     <label>Estado<select value={filter} onChange={e => setFilter(e.target.value)}><option value="">Todos</option>{['PENDIENTE', 'DEVUELTA', 'APROBADA', 'RECHAZADA'].map(estado => <option key={estado} value={estado}>{estado}</option>)}</select></label>
     <label>Documento<select value={documentFilter} onChange={e => setDocumentFilter(e.target.value)}><option value="">Todos</option>{documents.map(documento => <option key={documento.id} value={documento.id}>{documento.titulo}</option>)}</select></label>
-    <button className="secondary" disabled={busy || loading} onClick={() => void reload()}>Actualizar bandeja</button>
+    <button className="secondary" disabled={busy || loading} onClick={() => void reload()}>Actualizar bandeja</button></div>
     {loading && <p role="status">Cargando propuestas…</p>}
     {busy && !selected && <p role="status">Cargando comparación o procesando decisión…</p>}
     {!loading && items.length === 0 && <p>No hay propuestas para esta consulta.</p>}
-    <ul className="results">{items.map(p => <li key={p.id}><strong>{p.documento?.titulo}</strong><p>{p.estado} · {p.autor?.nombre} · {p.mensaje} · Base: {p.versionBase ?? 'desconocida'}</p>
-      <button disabled={busy} onClick={() => void select(p)}>Comparar propuesta</button></li>)}</ul>
-    {selected && current && <section className="workflow-section"><h2>Comparación: {current.titulo}</h2>
-      <p>Motivo: {selected.mensaje}</p><div className="comparison"><div><h3>Vigente · versión {version}</h3><pre>{current.contenidoActual}</pre></div>
+    <div className="review-grid"><aside><h2>Cola de revisión</h2><ul className="results proposal-list">{items.map(p => <li key={p.id} className={selected?.id === p.id ? 'selected' : undefined}><StateBadge state={p.estado} /><strong>{p.documento?.titulo}</strong><p>{p.mensaje}</p><div className="proposal-meta"><span>{p.autor?.nombre}</span><span>Base: {p.versionBase ?? 'desconocida'}</span></div>
+      <button disabled={busy} onClick={() => void select(p)}>Comparar propuesta</button></li>)}</ul><div className="review-rules"><h3>Reglas de revisión</h3><p>Solo revisor y administrador pueden decidir. La aprobación requiere una propuesta pendiente con base vigente. Una devolución permite al autor corregir y reenviar.</p></div></aside><div>
+    {!selected && <div className="review-placeholder"><span className="eyebrow">COMPARACIÓN EN PARALELO</span><h2>Selecciona una propuesta</h2><p>Revisa su motivo, el contenido vigente y los cambios propuestos antes de decidir.</p></div>}{selected && current && <section className="review-panel"><h2>Comparación: {current.titulo}</h2>
+      <p className="reason"><span className="eyebrow">MOTIVO DEL CAMBIO</span>{selected.mensaje}</p><div className="comparison"><div><h3>Vigente · versión {version}</h3><pre>{current.contenidoActual}</pre></div>
         <div><h3>Propuesto · base {selected.versionBase ?? 'desconocida'}</h3><pre>{selected.contenidoPropuesto}</pre></div></div>
       {stale && <p role="alert" className="error">La base es antigua o desconocida: no se puede aprobar. Si está DEVUELTA, su autor puede revisar el contenido vigente y confirmar una nueva base al reenviar.</p>}
-      {selected.comentarioRevision && <p>Observación de revisión: {selected.comentarioRevision}</p>}
+      {selected.comentarioRevision && <p className="observation">Observación de revisión: {selected.comentarioRevision}</p>}
       {user.rol === 'ANALISTA' && <p>Solo REVISOR o ADMIN pueden aprobar, rechazar o devolver.</p>}
       {selected.estado !== 'PENDIENTE' && <p>No se puede decidir: la propuesta está {selected.estado}. Las devueltas requieren corrección y reenvío del autor.</p>}
       {selected.estado === 'DEVUELTA' && selected.autorId === user.id && <Correction key={selected.id} proposal={selected} fail={fail} done={reload} />}
       <label>Comentario de revisión<textarea value={comment} onChange={e => setComment(e.target.value)} rows={2} /></label>
       {user.rol !== "ANALISTA" && <div className="actions"><button disabled={busy || !!stale || selected.estado !== "PENDIENTE"} onClick={() => void decide('aprobar')}>{stale ? 'Aprobación bloqueada: base antigua' : busy ? 'Procesando…' : 'Aprobar propuesta'}</button>
-        <button className="secondary" disabled={busy || selected.estado !== "PENDIENTE"} onClick={() => void decide('rechazar')}>Rechazar propuesta</button>
-        <button className="secondary" disabled={busy || selected.estado !== 'PENDIENTE' || !comment.trim()} onClick={() => void decide('devolver')}>Devolver para corrección</button></div>}
+        <button className="danger" disabled={busy || selected.estado !== "PENDIENTE"} onClick={() => void decide('rechazar')}>Rechazar propuesta</button>
+        <button className="warning" disabled={busy || selected.estado !== 'PENDIENTE' || !comment.trim()} onClick={() => void decide('devolver')}>Devolver para corrección</button></div>}
       {user.rol !== 'ANALISTA' && selected.estado === 'PENDIENTE' && !comment.trim() && <p>Para devolver, escribe una observación obligatoria.</p>}
       <a href={`#/documentos/${current.id}`}>Abrir documento e historial</a>
     </section>}
-    {notice && <p role="status">{notice}</p>}
+    </div></div>{notice && <p className="success-banner" role="status">{notice}</p>}
     {conflict && <p role="alert" className="error">{conflict}</p>}
     {reviewedId && <a href={`#/documentos/${reviewedId}`}>Ver documento e historial tras la revisión</a>}
   </section>;
