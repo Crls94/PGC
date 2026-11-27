@@ -7,6 +7,13 @@ class ProposalError extends Error {
   constructor(public status: number, message: string) { super(message); }
 }
 
+// Separación de funciones: quien propone un cambio no puede decidir sobre él.
+function impedirAutoRevision(autorId: string, req: AuthRequest): void {
+  if (autorId === req.user!.id) {
+    throw new ProposalError(403, "No puedes revisar tu propia propuesta: debe decidirla otro Revisor o Administrador.");
+  }
+}
+
 function respondError(res: Response, error: unknown): void {
   if (error instanceof ProposalError) res.status(error.status).json({ message: error.message });
   else if (error instanceof Prisma.PrismaClientKnownRequestError && ["P2034", "P2002"].includes(error.code)) {
@@ -74,6 +81,7 @@ export async function aprobarPropuesta(req: AuthRequest, res: Response): Promise
         include: { documento: { include: { versiones: { orderBy: { numeroVersion: "desc" }, take: 1 } } } },
       });
       if (!propuesta) throw new ProposalError(404, "Propuesta no encontrada");
+      impedirAutoRevision(propuesta.autorId, req);
       if (propuesta.estado !== EstadoPropuesta.PENDIENTE) throw new ProposalError(409, "La propuesta ya fue evaluada");
       const actual = propuesta.documento.versiones[0]?.numeroVersion;
       if (propuesta.versionBase == null || propuesta.versionBase !== actual) {
@@ -101,6 +109,7 @@ export async function rechazarPropuesta(req: AuthRequest, res: Response): Promis
     const resultado = await prisma.$transaction(async tx => {
       const propuesta = await tx.propuestaCambio.findUnique({ where: { id } });
       if (!propuesta) throw new ProposalError(404, "Propuesta no encontrada");
+      impedirAutoRevision(propuesta.autorId, req);
       const decision = await tx.propuestaCambio.updateMany({
         where: { id, estado: EstadoPropuesta.PENDIENTE },
         data: {
@@ -123,6 +132,7 @@ export async function devolverPropuesta(req: AuthRequest, res: Response): Promis
       const id = String(req.params.id);
       const existing = await tx.propuestaCambio.findUnique({ where: { id } });
       if (!existing) throw new ProposalError(404, 'Propuesta no encontrada');
+      impedirAutoRevision(existing.autorId, req);
       const result = await tx.propuestaCambio.updateMany({ where: { id, estado: EstadoPropuesta.PENDIENTE }, data: {
         estado: EstadoPropuesta.DEVUELTA, comentarioRevision: comentarioRevision.trim(), revisorId: req.user!.id, revisadoEn: new Date(),
       } });

@@ -8,7 +8,9 @@ const ts = require('typescript');
 const source = ts.transpileModule(fs.readFileSync(path.join(__dirname, '../src/DocumentActions.tsx'), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
-const document = n => ({ id: 'doc', titulo: `Título ${n}`, contenidoActual: `Contenido ${n}`, actualizadoEn: `fecha-${n}`, estado: 'BORRADOR', autorId: 'user', versiones: [{ numeroVersion: n }] });
+// Permisos que el backend calcula para un Analista sobre su propio borrador.
+const ownDraft = { editar: true, eliminar: true, restaurar: false, estadosPermitidos: ['EN_REVISION'] };
+const document = (n, permisos = ownDraft) => ({ id: 'doc', titulo: `Título ${n}`, contenidoActual: `Contenido ${n}`, actualizadoEn: `fecha-${n}`, estado: 'BORRADOR', autorId: 'user', versiones: [{ numeroVersion: n }], permisos });
 
 // Ejecuta el componente real con estado y efectos controlados, sin DOM ni red.
 function setup() {
@@ -51,10 +53,11 @@ function setup() {
   }
   const field = name => nodes().find(n => n.props?.name === name);
   const button = label => nodes().find(n => n.type === 'button' && n.props.children === label);
+  const forms = () => nodes().filter(n => n.type === 'form');
   function change(name, value) { field(name).props.onChange({ target: { value } }); render(); }
   async function submit() { await nodes().find(n => n.type === 'form').props.onSubmit({ preventDefault() {} }); render(); }
   render();
-  return { props, service, calls, errors, confirm, render, nodes, field, button, change, submit };
+  return { props, service, calls, errors, confirm, render, nodes, field, button, forms, change, submit };
 }
 
 test('actualizar con edición local conserva los tres campos y envía la base original', async () => {
@@ -111,6 +114,28 @@ test('guardado exitoso conserva la nueva base aunque falle la recarga', async ()
   assert.equal(h.errors.length, 0);
   h.change('motivo', 'Siguiente cambio'); await h.submit();
   assert.equal(h.calls[1][1].versionEsperada, 2);
+});
+
+test('el selector de estado solo ofrece los estados permitidos y envía la versión vigente', async () => {
+  const h = setup();
+  // Los objetos nacen en otro contexto de vm: se comparan por JSON.
+  const plain = value => JSON.parse(JSON.stringify(value));
+  assert.deepEqual(plain(h.field('estadoNuevo').props.children[1].map(o => o.props.value)), ['EN_REVISION']);
+  h.change('estadoNuevo', 'EN_REVISION'); h.change('motivoEstado', '  Listo para revisar ');
+  h.forms()[1].props.onSubmit({ preventDefault() {} });
+  await new Promise(r => setImmediate(r)); h.render();
+  assert.deepEqual(plain(h.calls[0]), ['doc', { estado: 'EN_REVISION', mensajeCambio: 'Listo para revisar', versionEsperada: 1 }]);
+  assert.equal(h.field('estadoNuevo').props.value, '');
+  assert.equal(h.errors.length, 0);
+});
+
+test('sin permisos no se ofrece editar, cambiar estado, restaurar ni eliminar', () => {
+  for (const permisos of [{ editar: false, eliminar: false, restaurar: false, estadosPermitidos: [] }, undefined]) {
+    const h = setup(); h.props.doc = { ...document(1), permisos, estado: 'PUBLICADO', autorId: 'otro' }; h.render();
+    assert.equal(h.forms().length, 0);
+    assert.equal(h.button('Eliminar documento'), undefined);
+    assert.ok(h.nodes().some(n => n.props?.className === 'muted' && String(n.props.children).includes('envía una propuesta')));
+  }
 });
 
 test('los campos se bloquean durante el guardado y se sincronizan al completarlo', async () => {

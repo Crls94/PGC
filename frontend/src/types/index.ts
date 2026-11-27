@@ -39,6 +39,13 @@ export interface VersionDocumento {
 
 export type VersionResumen = Pick<VersionDocumento, 'id' | 'numeroVersion' | 'mensajeCambio' | 'creadoEn' | 'autor'>;
 
+export interface PermisosDocumento {
+  editar: boolean;
+  eliminar: boolean;
+  restaurar: boolean;
+  estadosPermitidos: EstadoDocumento[];
+}
+
 export interface Documento {
   id: string;
   titulo: string;
@@ -51,11 +58,13 @@ export interface Documento {
   etiquetas?: Array<Etiqueta | string>;
   relaciones?: Array<{ id: string; titulo: string; estado: EstadoDocumento }>;
   versiones?: VersionResumen[];
+  // Calculado por el backend para el usuario de la sesión (solo en el detalle).
+  permisos?: PermisosDocumento;
   creadoEn: string;
   actualizadoEn: string;
 }
 
-export type DocumentoListado = Omit<Documento, 'autorId' | 'categoriaId' | 'versiones'> & { totalVersiones: number };
+export type DocumentoListado = Omit<Documento, 'autorId' | 'categoriaId' | 'versiones' | 'permisos'> & { totalVersiones: number };
 
 export interface PropuestaCambio {
   id: string;

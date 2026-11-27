@@ -204,6 +204,9 @@ export function ReviewInbox({ fail, user }: Props & { user: Usuario }) {
     } finally { setBusy(false); }
   }
   const stale = selected && (selected.versionBase == null || selected.versionBase !== version);
+  // Separación de funciones: nadie decide sobre su propia propuesta (el backend también lo impide).
+  const own = selected?.autorId === user.id;
+  const canDecide = user.rol !== 'ANALISTA' && !own;
   return <section className="status-card inbox-page"><div className="page-heading"><div><span className="eyebrow">CONTROL DE CALIDAD DOCUMENTAL</span><h1>Revisión de propuestas</h1><p>Compara el contenido y revisa cada cambio del equipo.</p></div><span className="badge">{items.length} propuestas en la consulta</span></div><div className="filter-bar">
     <label>Estado<select value={filter} onChange={e => setFilter(e.target.value)}><option value="">Todos</option>{['PENDIENTE', 'DEVUELTA', 'APROBADA', 'RECHAZADA'].map(estado => <option key={estado} value={estado}>{estado}</option>)}</select></label>
     <label>Documento<select value={documentFilter} onChange={e => setDocumentFilter(e.target.value)}><option value="">Todos</option>{documents.map(documento => <option key={documento.id} value={documento.id}>{documento.titulo}</option>)}</select></label>
@@ -219,13 +222,14 @@ export function ReviewInbox({ fail, user }: Props & { user: Usuario }) {
       {stale && <p role="alert" className="error">La base es antigua o desconocida: no se puede aprobar. Si está DEVUELTA, su autor puede revisar el contenido vigente y confirmar una nueva base al reenviar.</p>}
       {selected.comentarioRevision && <p className="observation">Observación de revisión: {selected.comentarioRevision}</p>}
       {user.rol === 'ANALISTA' && <p>Solo un Revisor o Administrador puede aprobar, rechazar o devolver.</p>}
+      {user.rol !== 'ANALISTA' && own && <p className="muted">No puedes revisar tu propia propuesta: debe decidirla otro Revisor o Administrador.</p>}
       {selected.estado !== 'PENDIENTE' && <p>No se puede decidir: la propuesta está {selected.estado}. Las devueltas requieren corrección y reenvío del autor.</p>}
       {selected.estado === 'DEVUELTA' && selected.autorId === user.id && <Correction key={selected.id} proposal={selected} fail={fail} done={reload} />}
-      {user.rol !== 'ANALISTA' && selected.estado === 'PENDIENTE' && <label>Comentario de revisión<textarea value={comment} onChange={e => setComment(e.target.value)} rows={2} /></label>}
-      {user.rol !== "ANALISTA" && <div className="actions"><button disabled={busy || !!stale || selected.estado !== "PENDIENTE"} onClick={() => void decide('aprobar')}>{stale ? 'Aprobación bloqueada: base antigua' : busy ? 'Procesando…' : 'Aprobar propuesta'}</button>
-        <button className="danger" disabled={busy || selected.estado !== "PENDIENTE"} onClick={() => void decide('rechazar')}>Rechazar propuesta</button>
-        <button className="warning" disabled={busy || selected.estado !== 'PENDIENTE' || !comment.trim()} onClick={() => void decide('devolver')}>Devolver para corrección</button></div>}
-      {user.rol !== 'ANALISTA' && selected.estado === 'PENDIENTE' && !comment.trim() && <p>Para devolver, escribe una observación obligatoria.</p>}
+      {canDecide && selected.estado === 'PENDIENTE' && <label>Comentario de revisión<textarea value={comment} onChange={e => setComment(e.target.value)} rows={2} /></label>}
+      {user.rol !== "ANALISTA" && <div className="actions"><button disabled={busy || !canDecide || !!stale || selected.estado !== "PENDIENTE"} onClick={() => void decide('aprobar')}>{stale ? 'Aprobación bloqueada: base antigua' : busy ? 'Procesando…' : 'Aprobar propuesta'}</button>
+        <button className="danger" disabled={busy || !canDecide || selected.estado !== "PENDIENTE"} onClick={() => void decide('rechazar')}>Rechazar propuesta</button>
+        <button className="warning" disabled={busy || !canDecide || selected.estado !== 'PENDIENTE' || !comment.trim()} onClick={() => void decide('devolver')}>Devolver para corrección</button></div>}
+      {canDecide && selected.estado === 'PENDIENTE' && !comment.trim() && <p>Para devolver, escribe una observación obligatoria.</p>}
       <a href={`#/documentos/${current.id}`}>Abrir documento e historial</a>
     </section>}
     </div></div>{notice && <p className="success-banner" role="status">{notice}</p>}

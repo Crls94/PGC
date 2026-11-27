@@ -3,6 +3,7 @@ import prisma from "../config/db.js";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 import { EstadoDocumento, Prisma } from "@prisma/client";
 import { diffLines, Change } from "diff";
+import { estadosPermitidos, permisosDocumento, puedeEditar, puedeEliminar, puedeRestaurar } from "../services/permisos.js";
 
 
 class DocumentError extends Error { constructor(public status: number, message: string) { super(message); } }
@@ -136,6 +137,7 @@ export async function obtenerDocumentoPorId(req: AuthRequest, res: Response): Pr
         ...documento,
         etiquetas: documento.etiquetas.map((e) => e.etiqueta.nombre),
         relaciones: documento.documentosRelacionados.map((r) => r.destino),
+        permisos: permisosDocumento(documento, req.user!),
       },
     });
   } catch (error: any) {
@@ -157,6 +159,10 @@ export async function crearDocumento(req: AuthRequest, res: Response): Promise<v
 
     if (etiquetas !== undefined && (!Array.isArray(etiquetas) || etiquetas.some(e => typeof e !== 'string'))) {
       res.status(400).json({ message: 'Las etiquetas deben ser una lista de textos' });
+      return;
+    }
+    if (estado !== undefined && !Object.values(EstadoDocumento).includes(estado)) {
+      res.status(400).json({ message: 'Estado inválido' });
       return;
     }
     const etiquetasNormalizadas = [...new Set<string>((etiquetas ?? []).map((e: string) => e.trim().toLowerCase()).filter(Boolean))];
@@ -239,13 +245,21 @@ export async function actualizarDocumento(req: AuthRequest, res: Response): Prom
     const result = await prisma.$transaction(async tx => {
       const doc = await tx.documento.findUnique({ where: { id }, include: { versiones: { orderBy: { numeroVersion: 'desc' }, take: 1 } } });
       if (!doc) throw new DocumentError(404, 'Documento no encontrado');
-      if (doc.estado === 'BORRADOR' && doc.autorId !== req.user!.id && req.user!.rol !== 'ADMIN') throw new DocumentError(403, 'No puedes editar borradores de otro usuario');
-      if (req.user!.rol === 'ANALISTA' && (doc.estado === 'PUBLICADO' || estado === 'PUBLICADO')) throw new DocumentError(403, 'Publicar o editar directamente un documento publicado requiere REVISOR o ADMIN');
+      if (!puedeEditar(doc, req.user!)) {
+        throw new DocumentError(403, doc.estado === 'BORRADOR'
+          ? 'No puedes editar borradores de otro usuario'
+          : 'Un Analista solo edita directamente sus borradores. Para este documento envía una propuesta de cambio.');
+      }
+      const cambiaEstado = estado !== undefined && estado !== doc.estado;
+      if (cambiaEstado && !estadosPermitidos(doc, req.user!).includes(estado)) {
+        throw new DocumentError(403, `No tienes permiso para cambiar el documento de ${doc.estado} a ${estado}`);
+      }
       const current = doc.versiones[0]?.numeroVersion ?? 1;
       checkVersion(versionEsperada, current);
       const nextContent = contenido ?? doc.contenidoActual;
       const documento = await tx.documento.update({ where: { id }, data: { titulo: titulo !== undefined ? String(titulo).trim() : doc.titulo, contenidoActual: nextContent, categoriaId: categoriaId !== undefined ? categoriaId || null : doc.categoriaId, estado: estado ?? doc.estado } });
-      const version = await tx.version.create({ data: { documentoId: id, numeroVersion: current + 1, contenido: nextContent, mensajeCambio: mensajeCambio || 'Actualizaci?n del documento', autorId: req.user!.id } });
+      const mensajePorDefecto = cambiaEstado ? `Cambio de estado: ${doc.estado} → ${estado}` : 'Actualización del documento';
+      const version = await tx.version.create({ data: { documentoId: id, numeroVersion: current + 1, contenido: nextContent, mensajeCambio: mensajeCambio || mensajePorDefecto, autorId: req.user!.id } });
       return { documento, version };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     res.json({ message: 'Documento actualizado y nueva versi?n registrada', ...result });
@@ -263,13 +277,22 @@ export async function eliminarDocumento(req: AuthRequest, res: Response): Promis
       return;
     }
 
-    // Solo el autor o un ADMIN puede borrar
-    if (doc.autorId !== req.user!.id && req.user!.rol !== "ADMIN") {
-      res.status(403).json({ message: "No tienes permisos para eliminar este documento" });
+    if (!puedeEliminar(doc, req.user!)) {
+      res.status(403).json({ message: doc.estado === "BORRADOR"
+        ? "Solo el autor o un ADMIN puede eliminar este borrador"
+        : "Solo un ADMIN puede eliminar un documento que no es borrador. Para retirarlo, márcalo como OBSOLETO." });
       return;
     }
 
-    await prisma.documento.delete({ where: { id } });
+    // La condición se repite en el borrado para que un cambio de estado concurrente no lo salte.
+    const condicion: Prisma.DocumentoWhereInput = req.user!.rol === "ADMIN"
+      ? { id }
+      : { id, autorId: req.user!.id, estado: EstadoDocumento.BORRADOR };
+    const borrado = await prisma.documento.deleteMany({ where: condicion });
+    if (borrado.count !== 1) {
+      res.status(409).json({ message: "El documento cambió antes de eliminarlo. Recarga antes de continuar." });
+      return;
+    }
     res.json({ message: "Documento eliminado correctamente" });
   } catch (error: any) {
     console.error("Error al eliminar documento:", error);
@@ -365,7 +388,8 @@ export async function restaurarVersion(req: AuthRequest, res: Response): Promise
     const result = await prisma.$transaction(async tx => {
       const doc = await tx.documento.findUnique({ where: { id }, include: { versiones: { orderBy: { numeroVersion: 'desc' }, take: 1 } } });
       if (!doc) throw new DocumentError(404, 'Documento no encontrado');
-      const target = await tx.version.findUnique({ where: { id: String(req.params.versionId) } });
+      if (!puedeRestaurar(doc, req.user!)) throw new DocumentError(403, 'No puedes restaurar versiones de un borrador de otro usuario');
+      const target =await tx.version.findUnique({ where: { id: String(req.params.versionId) } });
       if (!target || target.documentoId !== id) throw new DocumentError(404, 'Versi?n no encontrada para este documento');
       const current = doc.versiones[0]?.numeroVersion ?? 1;
       checkVersion(req.body?.versionEsperada, current);
