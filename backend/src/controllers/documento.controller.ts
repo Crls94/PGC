@@ -19,6 +19,10 @@ function checkVersion(value: unknown, current: number) {
   if (value !== current) throw new DocumentError(409, 'El documento cambi?. Recarga la versi?n vigente antes de continuar.');
 }
 
+function validText(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 // 1. Listar documentos con filtros y búsqueda
 export async function listarDocumentos(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -146,10 +150,16 @@ export async function crearDocumento(req: AuthRequest, res: Response): Promise<v
     const { titulo, contenido, categoriaId, estado, etiquetas, documentosRelacionadosIds } = req.body;
     const autorId = req.user!.id;
 
-    if (!titulo || !contenido) {
+    if (!validText(titulo) || !validText(contenido)) {
       res.status(400).json({ message: "El título y el contenido son obligatorios" });
       return;
     }
+
+    if (etiquetas !== undefined && (!Array.isArray(etiquetas) || etiquetas.some(e => typeof e !== 'string'))) {
+      res.status(400).json({ message: 'Las etiquetas deben ser una lista de textos' });
+      return;
+    }
+    const etiquetasNormalizadas = [...new Set<string>((etiquetas ?? []).map((e: string) => e.trim().toLowerCase()).filter(Boolean))];
 
     const resultado = await prisma.$transaction(async (tx) => {
       // Crear el documento
@@ -175,8 +185,8 @@ export async function crearDocumento(req: AuthRequest, res: Response): Promise<v
       });
 
       // Asociar etiquetas si se proporcionaron
-      if (Array.isArray(etiquetas) && etiquetas.length > 0) {
-        for (const nombreEtiqueta of etiquetas) {
+      if (etiquetasNormalizadas.length > 0) {
+        for (const nombreEtiqueta of etiquetasNormalizadas) {
           const etiqueta = await tx.etiqueta.upsert({
             where: { nombre: String(nombreEtiqueta).trim().toLowerCase() },
             create: { nombre: String(nombreEtiqueta).trim().toLowerCase() },
@@ -222,6 +232,9 @@ export async function actualizarDocumento(req: AuthRequest, res: Response): Prom
   try {
     const id = String(req.params.id);
     const { titulo, contenido, categoriaId, estado, mensajeCambio, versionEsperada } = req.body;
+    if ((titulo !== undefined && !validText(titulo)) || (contenido !== undefined && !validText(contenido))) {
+      throw new DocumentError(400, 'El título y el contenido deben ser textos no vacíos');
+    }
     if (estado !== undefined && !Object.values(EstadoDocumento).includes(estado)) throw new DocumentError(400, 'Estado inv?lido');
     const result = await prisma.$transaction(async tx => {
       const doc = await tx.documento.findUnique({ where: { id }, include: { versiones: { orderBy: { numeroVersion: 'desc' }, take: 1 } } });
@@ -293,8 +306,11 @@ export async function compararVersiones(req: AuthRequest, res: Response): Promis
     const v1 = req.query.v1 ? String(req.query.v1) : undefined;
     const v2 = req.query.v2 ? String(req.query.v2) : undefined;
 
-    if (!v1 || !v2) {
-      res.status(400).json({ message: "Debes especificar v1 y v2 (números de versión) para comparar" });
+    if (typeof req.query.v1 !== 'string' || typeof req.query.v2 !== 'string' ||
+      !/^[1-9]\d*$/.test(v1 ?? '') || !/^[1-9]\d*$/.test(v2 ?? '') ||
+      !Number.isSafeInteger(Number(v1)) || !Number.isSafeInteger(Number(v2)) ||
+      Number(v1) > 2147483647 || Number(v2) > 2147483647) {
+      res.status(400).json({ message: "v1 y v2 deben ser números de versión enteros positivos" });
       return;
     }
 
@@ -302,7 +318,7 @@ export async function compararVersiones(req: AuthRequest, res: Response): Promis
       where: {
         documentoId_numeroVersion: {
           documentoId: id,
-          numeroVersion: parseInt(v1, 10),
+          numeroVersion: Number(v1),
         },
       },
     });
@@ -311,7 +327,7 @@ export async function compararVersiones(req: AuthRequest, res: Response): Promis
       where: {
         documentoId_numeroVersion: {
           documentoId: id,
-          numeroVersion: parseInt(v2, 10),
+          numeroVersion: Number(v2),
         },
       },
     });

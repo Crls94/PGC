@@ -1,63 +1,22 @@
-# Frontend Web - Plataforma de Gestión de Conocimiento (Micro-SaaS)
+﻿# Frontend PGC
 
-## Inicio local
+React + TypeScript + Vite. Incluye acceso/registro de analistas, biblioteca con búsqueda y filtros, creación y detalle de documentos, edición autorizada, historial/diff/restauración, catálogos y revisión colaborativa con devolución, corrección y reenvío.
 
-La pantalla de inicio está implementada con React y TypeScript. Consulta `GET /api/health` al abrir y permite comprobar nuevamente la conexión, con estados de carga, disponibilidad y error.
+## Arranque local
 
-1. En `backend/`, ejecutar `npm install` y `npm run dev` (puerto 4000).
-2. En `frontend/`, ejecutar `npm install` y `npm run dev -- --port 3000`.
-3. Abrir `http://127.0.0.1:3000`.
+1. Preparar PostgreSQL y backend siguiendo `backend/README.md`. La API exige `JWT_SECRET` no vacío; no tiene clave de respaldo.
+2. Desde `frontend`, instalar con `npm.cmd ci --prefer-offline`.
+3. Copiar `.env.example` a `.env` si no existe y configurar `VITE_API_URL` para la API local. No versionar secretos.
+4. Ejecutar `npm.cmd run dev -- --port 5181 --strictPort` y abrir `http://127.0.0.1:5181/`.
 
-`npm run build` verifica TypeScript y genera la versión de producción. La URL de la API se puede configurar con `VITE_API_URL` en `.env`, siguiendo `.env.example`. El endpoint actual no requiere PostgreSQL y solo verifica que el servidor responda.
+Sin `.env`, el cliente apunta a `http://localhost:4000/api`. La URL se incorpora al arrancar Vite o compilar: reiniciar tras cambiarla. La demo existente usa API en 4014; las pruebas deben usar una API y una base distintas.
 
-Las vistas descritas a continuación son la estructura prevista; todavía no están implementadas.
+## Comprobaciones
 
-Estructura modular en **React** diseñada para la interfaz de usuario de la plataforma colaborativa de gestión y versionado de documentos técnicos.
+- `npm.cmd test`: pruebas del contenido/base de propuestas, incluyendo historial avanzado y rechazo de lecturas incoherentes.
+- `npm.cmd run build`: chequeo de tipos y build.
+- No hay validación visual automatizada: probar manualmente escritorio/móvil, permisos, errores, aprobación/rechazo y devolución → corrección → reenvío → aprobación.
 
----
+El contenido inicial se vincula a su versión guardada, no a la más reciente de otra consulta. Actualizar documento/historial conserva el borrador y su base original. Usar contenido vigente como nuevo borrador reemplaza ambos de forma explícita. Si no se puede comprobar su correspondencia, no se habilita una base inventada.
 
-## 📁 Arquitectura del Frontend
-
-```text
-frontend/
-├── public/                 # Recursos estáticos servidos directamente (favicon, manifest)
-├── src/
-│   ├── assets/             # Logos, íconos vectoriales y estilos globales
-│   ├── components/         # Componentes reutilizables
-│   │   ├── common/         # Componentes atómicos (Botones, Inputs, Modales, Badges, Alertas)
-│   │   ├── layout/         # Estructura visual de la app (Navbar, Sidebar, Footer, MainLayout)
-│   │   └── documents/      # Componentes de documentos (Editor Markdown, Visor de Diff/Versiones)
-│   ├── context/            # Estados globales con React Context (AuthContext, DocumentContext)
-│   ├── hooks/              # Custom Hooks (useAuth, useDocuments, etc.)
-│   ├── pages/              # Vistas principales:
-│   │                       #  - LoginPage (Inicio de sesión con JWT)
-│   │                       #  - DashboardPage (Bandeja y lista de notas/documentos)
-│   │                       #  - DocumentDetailPage (Lectura de documento vigente)
-│   │                       #  - DocumentEditorPage (Edición y propuesta de cambios)
-│   │                       #  - HistoryPage (Historial y comparación de versiones)
-│   │                       #  - ApprovalsPage (Panel para Líder Técnico/Revisor)
-│   ├── services/           # Comunicación con la API REST
-│   │   └── api.ts          # Cliente base para fetch/HTTP con token de autenticación
-│   ├── types/              # Definiciones TypeScript de entidades (Usuario, Documento, Version)
-│   │   └── index.ts
-│   └── utils/              # Funciones auxiliares y formateadores
-├── .env.example            # Variable VITE_API_URL hacia el backend (http://localhost:4000/api)
-└── README.md
-```
-
----
-
-## 🔌 Conexión con el Backend
-
-El backend corre por defecto en `http://localhost:4000/api`.
-En `src/services/api.ts` dispones de la función `apiRequest(endpoint, options)` configurada para enviar automáticamente el token JWT almacenado en `localStorage`.
-
----
-
-## 📋 Vistas Sugeridas según BPMN y Alcances
-
-1. **Autenticación:** Iniciar sesión según rol (Administrador, Revisor / Líder Técnico, Analista).
-2. **Dashboard / Explorador:** Listado de documentos, buscador, filtros por categoría y etiquetas.
-3. **Editor:** Creación y modificación en formato Markdown / texto enriquecido.
-4. **Visor de Historial y Diffs:** Línea de tiempo de versiones pasadas y comparación visual de cambios.
-5. **Panel de Aprobaciones:** Vista del Revisor para aprobar o rechazar propuestas de cambio.
+No se agregan publicación, estados, permisos o endpoints nuevos.

@@ -2,7 +2,7 @@ import { StateBadge } from './Visual';
 import { Health, Catalogs, Registration } from './Extras';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ApiError, authService, categoryService, documentService } from './services/api';
-import type { Categoria, Documento, EstadoDocumento, Usuario } from './types';
+import type { Categoria, Documento, DocumentoListado, EstadoDocumento, Usuario } from './types';
 import { CreateDocument, DocumentWorkflow, ReviewInbox } from './Workflow';
 
 export default function Demo() {
@@ -15,7 +15,7 @@ export default function Demo() {
   const [status, setStatus] = useState<EstadoDocumento | ''>('');
   const [categories, setCategories] = useState<Categoria[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
-  const [docs, setDocs] = useState<Documento[] | null>(null);
+  const [docs, setDocs] = useState<DocumentoListado[] | null>(null);
   const [doc, setDoc] = useState<Documento | null>(null);
   const [route, setRoute] = useState(location.hash);
   const generation = useRef(0);
@@ -31,7 +31,10 @@ export default function Demo() {
     } else setError(e instanceof Error ? e.message : 'No se pudo contactar con el servidor');
   }
   useEffect(() => {
-    const changed = () => setRoute(location.hash);
+    const changed = () => {
+      setRoute(location.hash);
+      if (localStorage.getItem('token')) setError('');
+    };
     window.addEventListener('hashchange', changed);
     return () => window.removeEventListener('hashchange', changed);
   }, []);
@@ -51,7 +54,7 @@ export default function Demo() {
     return () => { active = false; };
   }, []);
   useEffect(() => {
-    setDoc(null); setError('');
+    setDoc(null);
     const id = route.startsWith('#/documentos/') ? route.slice(13) : '';
     if (!user || !id) return;
     let active = true;

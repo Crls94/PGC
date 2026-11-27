@@ -1,9 +1,10 @@
 import { StateBadge } from './Visual';
 import { DocumentActions, TagSelector } from './Extras';
 import { Correction } from './Correction';
+import { documentSnapshot } from './documentSnapshot';
 import { useEffect, useState, type FormEvent } from 'react';
 import { ApiError, categoryService, documentService, proposalService } from './services/api';
-import type { Categoria, Documento, PropuestaCambio, Usuario, VersionDocumento } from './types';
+import type { Categoria, Documento, DocumentoListado, PropuestaCambio, Usuario, VersionDocumento } from './types';
 
 type Failure = (error: unknown) => void;
 type Props = { fail: Failure };
@@ -11,18 +12,20 @@ type Diff = Awaited<ReturnType<typeof documentService.compararDiff>>;
 
 export function CreateDocument({ fail }: Props) {
   const [categories, setCategories] = useState<Categoria[]>([]);
-  const [relatedDocuments, setRelatedDocuments] = useState<Documento[]>([]);
+  const [relatedDocuments, setRelatedDocuments] = useState<DocumentoListado[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryError, setCategoryError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     let active = true;
+    setLoading(true); setCategoryError(false);
     Promise.all([categoryService.listarCategorias(), documentService.listar()]).then(([r, documents]) => {
       if (active) { setCategories(r.categorias); setRelatedDocuments(documents.documentos); }
     })
       .catch(e => { if (active) { setCategoryError(true); fail(e); } }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, []);
+  }, [attempt]);
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -41,7 +44,7 @@ export function CreateDocument({ fail }: Props) {
   return <section className="status-card"><span className="eyebrow">BIBLIOTECA / NUEVO DOCUMENTO</span><h1>Crear documento</h1>
     <p>Se creará como borrador con su versión 1.</p>
     {loading && <p role="status">Cargando categorías…</p>}
-    {categoryError && <p role="alert">No se pudieron cargar las categorías. Vuelve a esta pantalla para reintentar.</p>}
+    {categoryError && <div role="alert">No se pudieron cargar categorías o documentos relacionados. <button type="button" className="secondary" onClick={() => setAttempt(n => n + 1)}>Reintentar carga</button></div>}
     <div className="editor-layout"><form onSubmit={create}>
       <label>Título<input name="titulo" required maxLength={200} /></label>
       <label>Contenido<textarea name="contenido" required rows={8} /></label>
@@ -59,6 +62,8 @@ export function DocumentWorkflow({ initial, user, fail }: Props & { initial: Doc
   const [versions, setVersions] = useState<VersionDocumento[]>([]);
   const [proposals, setProposals] = useState<PropuestaCambio[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [conflict, setConflict] = useState('');
@@ -73,29 +78,33 @@ export function DocumentWorkflow({ initial, user, fail }: Props & { initial: Doc
     let active = true;
     Promise.all([documentService.obtenerVersiones(doc.id), proposalService.listar({ documentoId: doc.id })]).then(([v, p]) => {
       if (!active) return;
+      const snapshot = documentSnapshot(initial, v.versiones);
       setVersions(v.versiones); setProposals(p.propuestas);
-      setBase(v.versiones[0]?.numeroVersion ?? null);
+      setBase(snapshot.versionBase);
       setV1(v.versiones[1]?.numeroVersion ?? v.versiones[0]?.numeroVersion ?? null);
       setV2(v.versiones[0]?.numeroVersion ?? null); setLoaded(true);
-    }).catch(e => { if (active) fail(e); });
+    }).catch(e => { if (active) { setLoadError(e instanceof Error ? e.message : 'No se pudo cargar el historial.'); fail(e); } })
+      .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [doc.id]);
-  async function refresh() {
-    setBusy(true);
+  async function refresh(propagateError = false) {
+    setBusy(true); setLoading(true); setLoadError('');
     try {
       const [d, v, p] = await Promise.all([documentService.obtenerPorId(doc.id), documentService.obtenerVersiones(doc.id), proposalService.listar({ documentoId: doc.id })]);
+      documentSnapshot(d.documento, v.versiones);
       setDoc(d.documento); setVersions(v.versiones); setProposals(p.propuestas); setLoaded(true); setDiff(null);
       // El borrador conserva su base original; recargarlo requiere una acción explícita.
-      setNotice('Documento e historial actualizados. Tu borrador conserva su texto y versión de origen.');
-    } catch (e) { fail(e); } finally { setBusy(false); }
+      setNotice('Documento e historial actualizados. La propuesta conserva su borrador y base original; la edición conserva los cambios sin guardar y su base.');
+    } catch (e) { setLoadError(e instanceof Error ? e.message : 'No se pudo actualizar.'); fail(e); if (propagateError) throw e; }
+    finally { setBusy(false); setLoading(false); }
   }
   async function propose(event: FormEvent) {
     event.preventDefault();
     if (!draft.trim() || !reason.trim() || !base) return;
     setBusy(true); setNotice(''); setConflict('');
     try {
-      await proposalService.crear({ documentoId: doc.id, contenidoPropuesto: draft, mensaje: reason, versionBase: base });
-      setProposals((await proposalService.listar({ documentoId: doc.id })).propuestas);
+      const result = await proposalService.crear({ documentoId: doc.id, contenidoPropuesto: draft, mensaje: reason, versionBase: base });
+      setProposals(items => [result.propuesta, ...items]);
       setReason(''); setNotice('Propuesta pendiente enviada. El contenido vigente no se ha modificado.');
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) setConflict(`${e.message} Actualiza el documento y luego elige «Usar contenido vigente».`);
@@ -113,12 +122,13 @@ export function DocumentWorkflow({ initial, user, fail }: Props & { initial: Doc
     <h1>{doc.titulo}</h1><div className="document-meta"><StateBadge state={doc.estado} /><span>{doc.autor?.nombre}</span><span>{doc.categoria?.nombre || 'Sin categoría'}</span></div>
     {!!doc.etiquetas?.length && <p>Etiquetas: {doc.etiquetas.map(e => typeof e === 'string' ? e : e.nombre).join(', ')}</p>}
     {!!doc.relaciones?.length && <p>Relacionados: {doc.relaciones.map((r, i) => <span key={r.id}>{i > 0 && ', '}<a href={`#/documentos/${r.id}`}>{r.titulo}</a></span>)}</p>}
-    <DocumentActions doc={doc} user={user} fail={fail} refresh={refresh} versions={versions} /><div className="document-reading-grid"><section className="reading-panel"><h2>Contenido vigente</h2><div className="document-content">{doc.contenidoActual}</div>
+    <DocumentActions doc={doc} user={user} fail={fail} refresh={() => refresh(true)} versions={versions} /><div className="document-reading-grid"><section className="reading-panel"><h2>Contenido vigente</h2><div className="document-content">{doc.contenidoActual}</div>
     <button className="secondary" onClick={() => void refresh()} disabled={busy}>Actualizar documento e historial</button>
     {notice && <p role="status">{notice}</p>}
     {conflict && <p role="alert" className="error">{conflict}</p>}
     </section><section className="workflow-section history-panel"><h2>Historial</h2>
-      {!loaded && <p role="status">Cargando historial…</p>}
+      {loading && <p role="status">Cargando historial…</p>}
+      {loadError && <p role="alert">{loadError} Usa «Actualizar documento e historial» para reintentar.</p>}
       {loaded && versions.length === 0 && <p>No hay versiones registradas.</p>}
       <ol className="history">{versions.map(v => <li key={v.id}><details><summary>Versión {v.numeroVersion} · {v.mensajeCambio}</summary>
         <p>{v.autor?.nombre} · {new Date(v.creadoEn).toLocaleString('es-PE')}</p><pre>{v.contenido}</pre></details></li>)}</ol>
@@ -140,7 +150,7 @@ export function DocumentWorkflow({ initial, user, fail }: Props & { initial: Doc
         <label>Contenido propuesto<textarea value={draft} onChange={e => setDraft(e.target.value)} required rows={8} /></label>
         <label>Motivo del cambio<textarea value={reason} onChange={e => setReason(e.target.value)} required rows={2} /></label>
         <button disabled={busy || !loaded || base == null}>{busy ? 'Enviando…' : 'Enviar propuesta'}</button>
-        <button className="secondary" type="button" disabled={busy || !loaded} onClick={() => { setDraft(doc.contenidoActual); setBase(versions[0]?.numeroVersion ?? null); setConflict(''); setNotice('Borrador reemplazado por el contenido vigente mostrado.'); }}>Usar contenido vigente como nuevo borrador</button>
+        <button className="secondary" type="button" disabled={busy || !loaded || !!loadError} onClick={() => { try { const snapshot = documentSnapshot(doc, versions); setDraft(snapshot.contenido); setBase(snapshot.versionBase); setConflict(''); setNotice('Borrador reemplazado por el contenido vigente mostrado.'); } catch (e) { fail(e); } }}>Usar contenido vigente como nuevo borrador</button>
       </form></section>
   </>;
 }
@@ -148,7 +158,7 @@ export function DocumentWorkflow({ initial, user, fail }: Props & { initial: Doc
 export function ReviewInbox({ fail, user }: Props & { user: Usuario }) {
   const [filter, setFilter] = useState('PENDIENTE');
   const [documentFilter, setDocumentFilter] = useState('');
-  const [documents, setDocuments] = useState<Documento[]>([]);
+  const [documents, setDocuments] = useState<DocumentoListado[]>([]);
   useEffect(() => { documentService.listar().then(r => setDocuments(r.documentos)).catch(fail); }, []);
   const [items, setItems] = useState<PropuestaCambio[]>([]);
   const [loading, setLoading] = useState(true);
@@ -174,8 +184,8 @@ export function ReviewInbox({ fail, user }: Props & { user: Usuario }) {
   async function select(p: PropuestaCambio) {
     setBusy(true); setSelected(null); setCurrent(null); setVersion(null); setComment(''); setNotice('');
     try {
-      const [d, v] = await Promise.all([documentService.obtenerPorId(p.documentoId), documentService.obtenerVersiones(p.documentoId)]);
-      setCurrent(d.documento); setVersion(v.versiones[0]?.numeroVersion ?? null); setSelected(p);
+      const d = await documentService.obtenerPorId(p.documentoId);
+      setCurrent(d.documento); setVersion(d.documento.versiones?.[0]?.numeroVersion ?? null); setSelected(p);
     } catch (e) { fail(e); } finally { setBusy(false); }
   }
   async function decide(action: 'aprobar' | 'rechazar' | 'devolver') {
@@ -208,10 +218,10 @@ export function ReviewInbox({ fail, user }: Props & { user: Usuario }) {
         <div><h3>Propuesto · base {selected.versionBase ?? 'desconocida'}</h3><pre>{selected.contenidoPropuesto}</pre></div></div>
       {stale && <p role="alert" className="error">La base es antigua o desconocida: no se puede aprobar. Si está DEVUELTA, su autor puede revisar el contenido vigente y confirmar una nueva base al reenviar.</p>}
       {selected.comentarioRevision && <p className="observation">Observación de revisión: {selected.comentarioRevision}</p>}
-      {user.rol === 'ANALISTA' && <p>Solo REVISOR o ADMIN pueden aprobar, rechazar o devolver.</p>}
+      {user.rol === 'ANALISTA' && <p>Solo un Revisor o Administrador puede aprobar, rechazar o devolver.</p>}
       {selected.estado !== 'PENDIENTE' && <p>No se puede decidir: la propuesta está {selected.estado}. Las devueltas requieren corrección y reenvío del autor.</p>}
       {selected.estado === 'DEVUELTA' && selected.autorId === user.id && <Correction key={selected.id} proposal={selected} fail={fail} done={reload} />}
-      <label>Comentario de revisión<textarea value={comment} onChange={e => setComment(e.target.value)} rows={2} /></label>
+      {user.rol !== 'ANALISTA' && selected.estado === 'PENDIENTE' && <label>Comentario de revisión<textarea value={comment} onChange={e => setComment(e.target.value)} rows={2} /></label>}
       {user.rol !== "ANALISTA" && <div className="actions"><button disabled={busy || !!stale || selected.estado !== "PENDIENTE"} onClick={() => void decide('aprobar')}>{stale ? 'Aprobación bloqueada: base antigua' : busy ? 'Procesando…' : 'Aprobar propuesta'}</button>
         <button className="danger" disabled={busy || selected.estado !== "PENDIENTE"} onClick={() => void decide('rechazar')}>Rechazar propuesta</button>
         <button className="warning" disabled={busy || selected.estado !== 'PENDIENTE' || !comment.trim()} onClick={() => void decide('devolver')}>Devolver para corrección</button></div>}

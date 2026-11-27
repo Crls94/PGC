@@ -37,21 +37,25 @@ export interface VersionDocumento {
   creadoEn: string;
 }
 
+export type VersionResumen = Pick<VersionDocumento, 'id' | 'numeroVersion' | 'mensajeCambio' | 'creadoEn' | 'autor'>;
+
 export interface Documento {
   id: string;
   titulo: string;
   contenidoActual: string;
   estado: EstadoDocumento;
-  categoriaId?: string;
-  categoria?: Categoria;
+  categoriaId?: string | null;
+  categoria?: Categoria | null;
   autorId: string;
   autor?: Usuario;
   etiquetas?: Array<Etiqueta | string>;
   relaciones?: Array<{ id: string; titulo: string; estado: EstadoDocumento }>;
-  versiones?: VersionDocumento[];
+  versiones?: VersionResumen[];
   creadoEn: string;
   actualizadoEn: string;
 }
+
+export type DocumentoListado = Omit<Documento, 'autorId' | 'categoriaId' | 'versiones'> & { totalVersiones: number };
 
 export interface PropuestaCambio {
   id: string;
