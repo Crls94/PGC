@@ -2,6 +2,7 @@
 import {
   Usuario,
   Documento,
+  DocumentoListado,
   VersionDocumento,
   PropuestaCambio,
   Categoria,
@@ -67,7 +68,7 @@ export const documentService = {
     if (filtros?.categoriaId) params.append("categoriaId", filtros.categoriaId);
     if (filtros?.estado) params.append("estado", filtros.estado);
     const query = params.toString() ? `?${params.toString()}` : "";
-    return apiRequest<{ total: number; documentos: Documento[] }>(`/documentos${query}`);
+    return apiRequest<{ total: number; documentos: DocumentoListado[] }>(`/documentos${query}`);
   },
 
   obtenerPorId: (id: string) =>

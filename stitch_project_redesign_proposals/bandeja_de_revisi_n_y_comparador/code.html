@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Manrope:wght@400;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-tertiary":"#ffffff","secondary-container":"#92f7c3","primary-fixed-dim":"#a5d0b9","surface-container-highest":"#dce2f3","on-surface-variant":"#414844","on-tertiary-fixed":"#00174b","secondary":"#006c48","tertiary-fixed":"#dbe1ff","surface":"#f9f9ff","surface-container-lowest":"#ffffff","on-primary-fixed-variant":"#274e3d","on-tertiary-container":"#84a3ff","on-error-container":"#93000a","on-primary-container":"#86af99","surface-container-high":"#e2e8f8","surface-variant":"#dce2f3","on-secondary-fixed-variant":"#005235","surface-container":"#e7eefe","inverse-on-surface":"#ebf1ff","error":"#ba1a1a","surface-container-low":"#f0f3ff","background":"#f9f9ff","outline-variant":"#c1c8c2","tertiary-container":"#003490","on-surface":"#151c27","outline":"#717973","tertiary-fixed-dim":"#b4c5ff","on-secondary-fixed":"#002113","on-primary-fixed":"#002114","secondary-fixed":"#92f7c3","primary-container":"#1b4332","inverse-surface":"#2a313d","inverse-primary":"#a5d0b9","on-primary":"#ffffff","on-background":"#151c27","on-secondary-container":"#00734d","primary":"#012d1d","primary-fixed":"#c1ecd4","on-secondary":"#ffffff","on-tertiary-fixed-variant":"#003ea8","surface-bright":"#f9f9ff","surface-tint":"#3f6653","secondary-fixed-dim":"#75daa8","tertiary":"#002162","surface-dim":"#d3daea","error-container":"#ffdad6","on-error":"#ffffff"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},spacing:{"space-xs":"0.25rem","margin-desktop":"2rem","space-md":"1rem","gutter-desktop":"1.5rem","space-lg":"1.5rem","gutter":"1rem","margin":"1rem","space-sm":"0.5rem","space-xl":"2.5rem"},fontFamily:{"headline-xl-mobile":["DM Sans"],"headline-lg-mobile":["DM Sans"],"body-lg":["Manrope"],"label-md":["Manrope"],"headline-lg":["DM Sans"],"body-md":["Manrope"],"label-lg":["Manrope"],"code-md":["JetBrains Mono"],"code-sm":["JetBrains Mono"],"headline-md":["DM Sans"],"body-sm":["Manrope"],"headline-xl":["DM Sans"]},fontSize:{"headline-xl-mobile":["26px",{lineHeight:"34px",letterSpacing:"-0.01em",fontWeight:"700"}],"headline-lg-mobile":["20px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"body-lg":["16px",{lineHeight:"26px",fontWeight:"400"}],"label-md":["12px",{lineHeight:"16px",letterSpacing:"0.02em",fontWeight:"600"}],"headline-lg":["24px",{lineHeight:"32px",letterSpacing:"-0.015em",fontWeight:"600"}],"body-md":["14px",{lineHeight:"22px",fontWeight:"400"}],"label-lg":["14px",{lineHeight:"20px",letterSpacing:"0.01em",fontWeight:"600"}],"code-md":["13px",{lineHeight:"20px",fontWeight:"400"}],"code-sm":["11px",{lineHeight:"16px",letterSpacing:"0.04em",fontWeight:"500"}],"headline-md":["18px",{lineHeight:"26px",fontWeight:"600"}],"body-sm":["12px",{lineHeight:"18px",fontWeight:"400"}],"headline-xl":["32px",{lineHeight:"40px",letterSpacing:"-0.02em",fontWeight:"700"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface min-h-screen flex flex-col antialiased"><header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-space-md lg:px-margin-desktop flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg shrink-0"><div class="flex items-center gap-space-sm"><img alt="Logo PGC" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ALJJyrBgghBf_h6aH7ppnX5QqpAwt4NJ8KhdTgwymnqYa5AkQOku7TVWjtKMvzSYqQIRc7D_v1VvESUuaGbyZm52rduG1kKfWR45jzTkClZJ37hwHAhpkMuWYWuvieE9WAPSlk2hg5wZQ4Gg3SX8EH3ZgfD6z952N4IfKLza4BGQXu4xm9FzIA4H5IYAy55U2flIETIYjxwEK6VZf-JGp3T5KunvIyXeNcnnL_t8uavO3S4"/><span class="font-code-md text-code-md text-on-surface tracking-tight font-medium">c. conocimiento/</span></div><nav class="hidden xl:flex items-center gap-space-sm" data-active-classes="bg-primary-container text-on-primary font-bold rounded-lg px-space-sm py-1"><a class="px-space-sm py-1 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="buscar" href="#">Buscar</a><a class="px-space-sm py-1 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="crear-documento" href="#">Crear documento</a><a class="px-space-sm py-1 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="categorias-y-etiquetas" href="#">Categorías y etiquetas</a><a aria-current="page" class="transition-colors bg-primary-container text-on-primary font-bold rounded-lg px-space-sm py-1" data-path="propuestas" href="#">Propuestas</a></nav></div><div class="flex items-center gap-space-sm lg:gap-space-md shrink-0"><div class="hidden sm:flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-lg"><span class="flex h-2 w-2 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span></span><span class="font-code-sm text-code-sm text-secondary font-medium uppercase">API disponible</span><button class="ml-space-xs font-code-sm text-code-sm text-on-surface-variant hover:text-on-surface underline underline-offset-2 transition-colors" type="button">Reintentar conexión</button></div><div class="h-4 w-px bg-surface-container-high hidden md:block"></div><div class="flex items-center gap-space-sm"><div class="flex items-center gap-space-xs bg-surface-container px-space-sm py-1 rounded-lg"><span class="font-code-sm text-code-sm text-on-surface">Ana Torres · <span class="text-primary font-bold">ANALISTA</span></span></div><button class="font-label-md text-label-md text-on-surface-variant hover:text-error transition-colors px-space-xs py-1" type="button">Cerrar sesión</button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-16 bg-surface flex-1"><div class="flex flex-col w-full">
+<!-- Operational Breadcrumbs & Context Strip -->
+<div class="w-full bg-surface-container-low px-space-md lg:px-margin-desktop py-space-xs flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs font-code-sm text-code-sm text-on-surface-variant">
+<span>PGC-GLOBAL-008</span>
+<span>/</span>
+<span>MODULO_REVISION</span>
+<span>/</span>
+<span class="text-on-surface font-semibold">PGC-INBOX-001</span>
+</div>
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs bg-surface-container px-space-sm py-0.5 rounded-lg">
+<span class="material-symbols-outlined text-[16px] text-primary">verified_user</span>
+<span class="font-code-sm text-code-sm text-on-surface">Sesión activa: <span class="text-primary font-bold">Luis Medina · REVISOR</span></span>
+</div>
+<div class="flex items-center gap-space-xs font-code-sm text-code-sm text-on-surface-variant">
+<span class="inline-block w-2 h-2 rounded-full bg-secondary"></span>
+<span>Modo de decisión sincrónica</span>
+</div>
+</div>
+</div>
+<!-- Main View Container: Master/Detail Split Layout -->
+<div class="w-full px-space-md lg:px-margin-desktop py-space-lg flex flex-col gap-space-lg">
+<!-- Header & Top Filter Toolbar -->
+<div class="flex flex-col gap-space-md">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+<div>
+<div class="font-code-sm text-code-sm text-secondary uppercase tracking-wider mb-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]">rate_review</span>
+            Flujo de Control de Calidad Documental
+          </div>
+<h1 class="font-headline-xl text-headline-xl text-primary tracking-tight">Revisión de propuestas</h1>
+</div>
+<!-- Toolbar Buttons & Status indicator -->
+<div class="flex items-center gap-space-sm">
+<button class="inline-flex items-center gap-space-xs bg-surface-container hover:bg-surface-container-high text-on-surface px-space-md py-2 rounded-lg font-label-lg text-label-lg transition-colors shadow-sm" id="btn-actualizar" type="button">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+<span>Actualizar bandeja</span>
+</button>
+<span class="font-code-sm text-code-sm bg-surface-container-high px-space-sm py-2 rounded-lg text-on-surface-variant">
+            2 pendientes
+          </span>
+</div>
+</div>
+<!-- Filter Matrix Segment -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex flex-wrap items-center gap-space-md">
+<!-- Filter: Estado (PGC-INBOX-002) -->
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1" for="filtro-estado">
+<span class="material-symbols-outlined text-[14px]">tune</span> Estado
+            </label>
+<div class="relative">
+<select class="appearance-none bg-surface-container-low text-on-surface font-body-md text-body-md pl-3 pr-8 py-1.5 rounded-lg focus:outline-none focus:bg-surface-container cursor-pointer shadow-sm min-w-[150px]" id="filtro-estado">
+<option selected="" value="PENDIENTE">PENDIENTE</option>
+<option value="DEVUELTA">DEVUELTA</option>
+<option value="APROBADA">APROBADA</option>
+<option value="RECHAZADA">RECHAZADA</option>
+<option value="TODOS">Todos</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 pointer-events-none text-on-surface-variant text-[18px]">arrow_drop_down</span>
+</div>
+</div>
+<!-- Filter: Documento (PGC-INBOX-003) -->
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1" for="filtro-documento">
+<span class="material-symbols-outlined text-[14px]">article</span> Documento
+            </label>
+<div class="relative">
+<select class="appearance-none bg-surface-container-low text-on-surface font-body-md text-body-md pl-3 pr-8 py-1.5 rounded-lg focus:outline-none focus:bg-surface-container cursor-pointer shadow-sm min-w-[210px]" id="filtro-documento">
+<option selected="" value="GUIA_OPS">Guía de operaciones</option>
+<option value="TODOS">Todos los documentos</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 pointer-events-none text-on-surface-variant text-[18px]">arrow_drop_down</span>
+</div>
+</div>
+<!-- Quick Filter Status Tag -->
+<div class="hidden sm:flex items-center gap-2 self-end pb-1.5 pl-2">
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-medium">FILTRO ACTIVO: PENDIENTE</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Mostrando cola prioritaria</span>
+</div>
+</div>
+<!-- Metric pill -->
+<div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-2 rounded-lg">
+<span class="material-symbols-outlined text-secondary text-[20px]">assignment_turned_in</span>
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm uppercase text-on-surface-variant">Tasa de resolución</span>
+<span class="font-code-md text-code-md font-semibold text-primary">94.2% mes corriente</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Core Grid Area: Inbox Proposal List (Left) & Diff Comparison Engine (Right) -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT RAIL: Bandeja de Propuestas (PGC-INBOX-008, PGC-INBOX-009) -->
+<div class="xl:col-span-4 flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+<span>Cola de revisión</span>
+<span class="font-code-sm text-code-sm bg-primary-fixed text-on-primary-fixed px-2 py-0.5 rounded-full font-bold">2</span>
+</h2>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Prioridad cronológica</span>
+</div>
+<div class="flex flex-col gap-space-sm" id="inbox-list">
+<!-- Fila 1: SELECCIONADA (PGC-INBOX-010) -->
+<div class="proposal-card active relative bg-surface-container-lowest p-space-md rounded-xl shadow-md cursor-pointer transition-all hover:shadow-lg">
+<div class="absolute left-0 top-3 bottom-3 w-1.5 bg-primary-container rounded-r"></div>
+<div class="flex items-start justify-between gap-space-sm mb-2">
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold tracking-wider">
+                PENDIENTE
+              </span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">PROP-8821</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Guía de operaciones</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-3 leading-relaxed">
+              Actualización de pasos en turno nocturno para mitigar retrasos en transferencias.
+            </p>
+<div class="flex flex-wrap items-center justify-between gap-2 pt-2 bg-surface-container-low/60 -mx-space-md -mb-space-md p-space-sm rounded-b-xl">
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">Ana Torres</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Versión base: 2</span>
+</div>
+<button class="inline-flex items-center gap-1 bg-primary text-on-primary px-3 py-1.5 rounded-lg font-label-md text-label-md hover:bg-primary-container transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">compare_arrows</span>
+<span>Comparar propuesta</span>
+</button>
+</div>
+</div>
+<!-- Fila 2: Segunda propuesta -->
+<div class="proposal-card bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow cursor-pointer transition-all">
+<div class="flex items-start justify-between gap-space-sm mb-2">
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold tracking-wider">
+                PENDIENTE
+              </span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">PROP-8819</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Manual de incorporación de analistas</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-3 leading-relaxed">
+              Corrección de enlaces de intranet y ajuste de credenciales para laboratorio de staging.
+            </p>
+<div class="flex flex-wrap items-center justify-between gap-2 pt-2 bg-surface-container-low/30 -mx-space-md -mb-space-md p-space-sm rounded-b-xl">
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface font-medium">Carlos Ramos</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Versión base: 1</span>
+</div>
+<button class="inline-flex items-center gap-1 bg-surface-container hover:bg-surface-container-high text-on-surface px-3 py-1.5 rounded-lg font-label-md text-label-md transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">compare_arrows</span>
+<span>Comparar propuesta</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Secondary Information Card -->
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col gap-2">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-[20px]">policy</span>
+<span class="font-headline-md text-headline-md">Reglas de aprobación</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            Las propuestas requieren revisión cruzada por al menos un analista revisor habilitado. Las discrepancias de versión base bloquean automáticamente la fusión directa a rama canónica.
+          </p>
+</div>
+</div>
+<!-- RIGHT RAIL: Panel de Detalle y Comparación (PGC-REVIEW-001 a PGC-REVIEW-016) -->
+<div class="xl:col-span-8 flex flex-col gap-space-md">
+<!-- Header & Justification Segment (PGC-REVIEW-001, PGC-REVIEW-002) -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm pb-space-sm">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="font-code-sm text-code-sm bg-secondary-fixed text-on-secondary-fixed px-2 py-0.5 rounded font-bold">PGC-REVIEW-001</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">ID: DOC-702-REV2</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-primary tracking-tight">Comparación: Guía de operaciones</h2>
+</div>
+<!-- Quick link: Abrir documento e historial (PGC-REVIEW-010) -->
+<a class="inline-flex items-center gap-1.5 text-primary hover:text-primary-container font-label-lg text-label-lg transition-colors px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined text-[18px]">history_edu</span>
+<span>Abrir documento e historial</span>
+</a>
+</div>
+<!-- Reason block (PGC-REVIEW-002) -->
+<div class="bg-surface-container-low p-space-md rounded-lg flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[22px] shrink-0 mt-0.5">announcement</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md uppercase text-on-surface-variant font-semibold">Motivo declarado del cambio</span>
+<p class="font-body-md text-body-md text-on-surface font-medium leading-relaxed">
+                Motivo: Actualización de pasos en turno nocturno para mitigar retrasos en transferencias.
+              </p>
+</div>
+</div>
+<!-- Base Version Validation Alert (PGC-REVIEW-013) -->
+<div class="bg-[#F0FDF4] p-space-md rounded-lg flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-[#DCFCE7] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[#166534] text-[20px]">check_circle</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-[#166534] font-bold">Validación de base canónica verificada</span>
+<span class="font-body-sm text-body-sm text-[#166534]">
+                  La versión base propuesta (versión 2) coincide exactamente con la versión vigente en el repositorio. Habilitada para aprobación directa sin rebase.
+                </span>
+</div>
+</div>
+<span class="hidden sm:inline-flex font-code-sm text-code-sm uppercase bg-[#DCFCE7] text-[#166534] px-2.5 py-1 rounded font-bold shrink-0">
+              HASH MATCH: OK
+            </span>
+</div>
+<!-- Side-by-Side Diff Engine Viewport (PGC-REVIEW-003, PGC-REVIEW-004) -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold">Comparativa en paralelo</span>
+<div class="flex items-center gap-3 font-code-sm text-code-sm text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-[#FEE2E2] inline-block"></span> Eliminaciones</span>
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-[#DCFCE7] inline-block"></span> Nuevas adiciones</span>
+</div>
+</div>
+<!-- The Dual Column Code/Text Diff Canvas -->
+<div class="grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden shadow-inner bg-surface-container-high/40">
+<!-- LEFT COLUMN: Vigente · versión 2 (PGC-REVIEW-003) -->
+<div class="flex flex-col bg-surface-container-lowest">
+<div class="bg-surface-container-low px-space-md py-2.5 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">lock</span>
+<span class="font-label-lg text-label-lg text-on-surface font-bold">Vigente · versión 2</span>
+</div>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Canónico / Publicado</span>
+</div>
+<div class="p-space-md font-code-md text-code-md overflow-x-auto text-on-surface leading-relaxed max-h-[380px] select-text">
+<pre class="font-code-md whitespace-pre-wrap text-code-md"><code><span class="text-on-surface-variant opacity-60">01</span> # PROTOCOLO DE TRANSMISIÓN NOCTURNA
+<span class="text-on-surface-variant opacity-60">02</span> 
+<span class="text-on-surface-variant opacity-60">03</span> ## 1. Inicio de ventana de sincronización
+<span class="text-on-surface-variant opacity-60">04</span> La ventana operativa nocturna inicia a las 23:00 hrs.
+<span class="text-on-surface-variant opacity-60">05</span> Todos los operadores deben verificar el estado de cola.
+<span class="text-on-surface-variant opacity-60">06</span> 
+<span class="text-on-surface-variant opacity-60">07</span> ## 2. Ejecución de lotes de transferencias
+<span class="text-on-surface-variant opacity-60">08</span> <span class="bg-[#FEE2E2] text-[#991B1B] px-1 py-0.5 rounded line-through">Se procesarán los paquetes de forma secuencial cada 45 minutos.</span>
+<span class="text-on-surface-variant opacity-60">09</span> <span class="bg-[#FEE2E2] text-[#991B1B] px-1 py-0.5 rounded line-through">En caso de error en nodo A, pausar todo el procesamiento general</span>
+<span class="text-on-surface-variant opacity-60">10</span> <span class="bg-[#FEE2E2] text-[#991B1B] px-1 py-0.5 rounded line-through">hasta recibir confirmación telefónica del supervisor de guardia.</span>
+<span class="text-on-surface-variant opacity-60">11</span> 
+<span class="text-on-surface-variant opacity-60">12</span> ## 3. Cierre y concilación
+<span class="text-on-surface-variant opacity-60">13</span> Generar archivo resumido a las 05:30 hrs y enviar vía correo.</code></pre>
+</div>
+</div>
+<!-- RIGHT COLUMN: Propuesto · base 2 (PGC-REVIEW-004) -->
+<div class="flex flex-col bg-surface-container-lowest">
+<div class="bg-surface-container px-space-md py-2.5 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary">edit_note</span>
+<span class="font-label-lg text-label-lg text-primary font-bold">Propuesto · base 2</span>
+</div>
+<span class="font-code-sm text-code-sm text-secondary font-semibold">Ana Torres · Modificación</span>
+</div>
+<div class="p-space-md font-code-md text-code-md overflow-x-auto text-on-surface leading-relaxed max-h-[380px] select-text">
+<pre class="font-code-md whitespace-pre-wrap text-code-md"><code><span class="text-on-surface-variant opacity-60">01</span> # PROTOCOLO DE TRANSMISIÓN NOCTURNA
+<span class="text-on-surface-variant opacity-60">02</span> 
+<span class="text-on-surface-variant opacity-60">03</span> ## 1. Inicio de ventana de sincronización
+<span class="text-on-surface-variant opacity-60">04</span> La ventana operativa nocturna inicia a las 23:00 hrs.
+<span class="text-on-surface-variant opacity-60">05</span> Todos los operadores deben verificar el estado de cola.
+<span class="text-on-surface-variant opacity-60">06</span> 
+<span class="text-on-surface-variant opacity-60">07</span> ## 2. Ejecución de lotes de transferencias
+<span class="text-on-surface-variant opacity-60">08</span> <span class="bg-[#DCFCE7] text-[#166534] font-semibold px-1 py-0.5 rounded">Se procesarán los paquetes en paralelo multicanal cada 15 minutos.</span>
+<span class="text-on-surface-variant opacity-60">09</span> <span class="bg-[#DCFCE7] text-[#166534] font-semibold px-1 py-0.5 rounded">En caso de error en nodo A, desviar tráfico a nodo B secundario</span>
+<span class="text-on-surface-variant opacity-60">10</span> <span class="bg-[#DCFCE7] text-[#166534] font-semibold px-1 py-0.5 rounded">y registrar incidente P2 en panel automático sin detener la cola.</span>
+<span class="text-on-surface-variant opacity-60">11</span> 
+<span class="text-on-surface-variant opacity-60">12</span> ## 3. Cierre y concilación
+<span class="text-on-surface-variant opacity-60">13</span> Generar archivo resumido a las 05:30 hrs y enviar vía correo.</code></pre>
+</div>
+</div>
+</div>
+</div>
+<!-- Review Decision Form Block (PGC-REVIEW-006, PGC-REVIEW-016) -->
+<div class="flex flex-col gap-space-sm pt-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-headline-md text-headline-md text-on-surface flex items-center gap-2" for="comentario-revision">
+<span>Comentario de revisión</span>
+<span class="text-error font-body-sm">*</span>
+</label>
+<!-- Contextual helper alert (PGC-REVIEW-016) -->
+<span class="font-body-sm text-body-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-lg flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-[#F97316]">info</span>
+<span>Para devolver, escribe una observación obligatoria.</span>
+</span>
+</div>
+<textarea class="w-full bg-surface-container-lowest text-on-surface font-body-md text-body-md p-space-md rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary focus:bg-surface shadow-sm resize-none" id="comentario-revision" placeholder="Escribe una observación para la devolución o nota de aprobación..." rows="2"></textarea>
+<!-- Action Buttons for REVISOR (PGC-REVIEW-007, PGC-REVIEW-008, PGC-REVIEW-009) -->
+<div class="flex flex-wrap items-center justify-between gap-space-md pt-space-sm">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-code-sm text-code-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary">shield</span>
+<span>Firmado criptográficamente por Luis Medina</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm">
+<!-- Botón de descarte: Rechazar propuesta (PGC-REVIEW-009) -->
+<button class="inline-flex items-center gap-space-xs bg-[#FEE2E2] hover:bg-[#FCDAD7] text-[#DC2626] font-label-lg text-label-lg px-space-md py-2.5 rounded-lg transition-all shadow-sm active:scale-95" id="btn-rechazar" type="button">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+<span>Rechazar propuesta</span>
+</button>
+<!-- Botón secundario de advertencia: Devolver para corrección (PGC-REVIEW-008) -->
+<button class="inline-flex items-center gap-space-xs bg-[#FFEDD5] hover:bg-[#FED7AA] text-[#C2410C] font-label-lg text-label-lg px-space-md py-2.5 rounded-lg transition-all shadow-sm active:scale-95" id="btn-devolver" type="button">
+<span class="material-symbols-outlined text-[18px]">assignment_return</span>
+<span>Devolver para corrección</span>
+</button>
+<!-- Botón primario: Aprobar propuesta (PGC-REVIEW-007) en Verde Bosque #1B4332 -->
+<button class="inline-flex items-center gap-space-xs bg-[#1B4332] hover:bg-[#2D6A4F] text-white font-label-lg text-label-lg px-space-lg py-2.5 rounded-lg transition-all shadow-md active:scale-95" id="btn-aprobar" type="button">
+<span class="material-symbols-outlined text-[18px]">check</span>
+<span>Aprobar propuesta</span>
+</button>
+</div>
+</div>
+<!-- Toast / Notification container dynamically triggered via inline JS -->
+<div class="hidden p-space-md rounded-xl items-center gap-space-sm transition-all duration-300" id="action-feedback"></div>
+</div>
+</div>
+<!-- Telemetry & Diff Metrics Bento Strip -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">fitbit_hourly_activity</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface-variant uppercase">Líneas modificadas</span>
+<span class="font-headline-md text-headline-md text-on-surface font-bold">+3 / -3 líneas</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[22px]">timer</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface-variant uppercase">Tiempo en cola</span>
+<span class="font-headline-md text-headline-md text-on-surface font-bold">2h 14m</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[22px]">history</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface-variant uppercase">Próxima versión estimada</span>
+<span class="font-headline-md text-headline-md text-primary font-bold">Versión 3.0</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive behavior script -->
+<script>
+    (function initReviewWorkflow() {
+      const btnAprobar = document.getElementById('btn-aprobar');
+      const btnDevolver = document.getElementById('btn-devolver');
+      const btnRechazar = document.getElementById('btn-rechazar');
+      const comentario = document.getElementById('comentario-revision');
+      const feedback = document.getElementById('action-feedback');
+      const btnActualizar = document.getElementById('btn-actualizar');
+
+      function showNotification(type, message, icon) {
+        if (!feedback) return;
+        feedback.className = 'flex p-space-md rounded-xl items-center gap-space-sm shadow-md transition-all duration-300';
+        
+        if (type === 'success') {
+          feedback.classList.add('bg-[#F0FDF4]', 'text-[#166534]');
+        } else if (type === 'warning') {
+          feedback.classList.add('bg-[#FFF7ED]', 'text-[#C2410C]');
+        } else if (type === 'error') {
+          feedback.classList.add('bg-[#FEF2F2]', 'text-[#991B1B]');
+        } else {
+          feedback.classList.add('bg-surface-container', 'text-on-surface');
+        }
+
+        feedback.innerHTML = `
+          <span class="material-symbols-outlined text-[22px] shrink-0">${icon}</span>
+          <div class="flex flex-col">
+            <span class="font-label-lg text-label-lg font-bold">${message}</span>
+            <span class="font-code-sm text-code-sm opacity-90">Transacción registrada en el log de auditoría (PGC-AUDIT-2024).</span>
+          </div>
+        `;
+        feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      if (btnAprobar) {
+        btnAprobar.addEventListener('click', () => {
+          showNotification('success', 'Propuesta aprobada con éxito. Fusionada a versión canónica 3.', 'check_circle');
+        });
+      }
+
+      if (btnDevolver) {
+        btnDevolver.addEventListener('click', () => {
+          const val = comentario.value.trim();
+          if (!val) {
+            showNotification('error', 'Error: Para devolver la propuesta, escribe una observación obligatoria en el comentario de revisión.', 'error');
+            comentario.focus();
+            comentario.classList.add('ring-2', 'ring-error');
+            setTimeout(() => comentario.classList.remove('ring-2', 'ring-error'), 3000);
+          } else {
+            showNotification('warning', 'Propuesta devuelta al analista Ana Torres con las observaciones registradas.', 'assignment_return');
+          }
+        });
+      }
+
+      if (btnRechazar) {
+        btnRechazar.addEventListener('click', () => {
+          if (confirm('¿Confirma el rechazo definitivo de la propuesta para "Guía de operaciones"?')) {
+            showNotification('error', 'Propuesta rechazada y archivada sin cambios en el repositorio.', 'cancel');
+          }
+        });
+      }
+
+      if (btnActualizar) {
+        btnActualizar.addEventListener('click', () => {
+          btnActualizar.classList.add('animate-pulse');
+          setTimeout(() => {
+            btnActualizar.classList.remove('animate-pulse');
+            showNotification('info', 'Bandeja sincronizada con el servidor central PGC.', 'sync');
+          }, 600);
+        });
+      }
+    })();
+  </script>
+</div></main><footer class="w-full bg-surface-container-low py-space-md"><div class="w-full px-space-md lg:px-margin-desktop flex flex-col md:flex-row items-center justify-between gap-space-xs"><p class="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">Plataforma colaborativa de gestión del conocimiento · Prueba de concepto local</p><p class="font-code-sm text-code-sm text-on-surface-variant">PGC-GLOBAL-008 · v1.4.0</p></div></footer></body></html>

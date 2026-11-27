@@ -168,3 +168,28 @@ se detuvieron al terminar. El contenedor y su volumen se conservaron.
 | `POST` | `/api/categorias` | Crear una nueva categoría (`nombre`, `descripcion`) | Sí |
 | `GET` | `/api/categorias/etiquetas` | Listar etiquetas existentes | No |
 | `POST` | `/api/categorias/etiquetas` | Crear una nueva etiqueta (`nombre`) | Sí |
+
+## Cierre: JWT y validación local
+
+La API exige `JWT_SECRET` no vacío al arrancar, incluyendo health. Ya no usa una clave conocida de respaldo. Copiar `.env.example` a `.env` solo si falta y completar `JWT_SECRET` con un valor aleatorio local; no versionarlo, imprimirlo en informes ni reutilizar credenciales de otra instalación.
+
+Alternativa temporal en PowerShell, dentro de la terminal que arranca la API (no imprime el valor):
+
+```powershell
+$env:JWT_SECRET = ([guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N'))
+npm.cmd start
+```
+
+Para conservar sesiones entre reinicios, mantener el mismo secreto local. Cambiarlo invalida tokens anteriores y los usuarios deben ingresar nuevamente. Los scripts de demo ya cargan su secreto desde configuración temporal.
+
+Los endpoints y permisos se conservan. Crear/editar rechaza con 400 títulos o contenidos no textuales, vacíos o de solo espacios antes de escribir. El contenido válido conserva sus saltos y espacios; el título se recorta. Etiquetas se recortan, convierten a minúsculas y deduplican dentro de cada solicitud. Comparación exige v1/v2 enteros positivos representables con precisión; parámetros inválidos dan 400 y versiones inexistentes dan 404. versionEsperada continúa opcional. No hay migraciones nuevas.
+
+### Pruebas de cierre aisladas
+
+`tests/cierre-validaciones.integration.cjs` requiere `PGC_TEST_CONFIG` (ruta a JSON privado con databaseUrl, jwtSecret y email de una cuenta ficticia existente) y `PGC_TEST_API_URL` (API local conectada a esa misma base). La base debe llamarse `pgc_demo_audit_*` o `pgc_demo_test_*`. Nunca apuntar a la base de trabajo. La prueba verifica identidad antes de escribir y elimina solo su documento desechable. No ejecutar seeds destructivos.
+
+```powershell
+node --test tests/cierre-validaciones.integration.cjs
+```
+
+La prueba de JWT ejecuta procesos sin secreto y comprueba que terminan antes de abrir el servidor. Las demás pruebas anteriores conservan su configuración de demo y puertos: no ejecutarlas contra una demo que quieras conservar.

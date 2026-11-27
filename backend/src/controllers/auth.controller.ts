@@ -4,8 +4,8 @@ import jwt from "jsonwebtoken";
 import prisma from "../config/db.js";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 import { Rol } from "@prisma/client";
+import { JWT_SECRET } from '../config/env.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || "clave_secreta_global_hitss";
 const JWT_EXPIRES_IN = "24h";
 
 export async function register(req: Request, res: Response): Promise<void> {

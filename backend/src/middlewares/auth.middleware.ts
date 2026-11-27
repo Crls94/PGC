@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "../config/db.js";
 import { Rol } from "@prisma/client";
+import { JWT_SECRET } from '../config/env.js';
 
 export interface TokenPayload {
   id: string;
@@ -13,7 +14,6 @@ export interface AuthRequest extends Request {
   user?: TokenPayload;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "clave_secreta_global_hitss";
 
 export async function authenticateToken(
   req: AuthRequest,

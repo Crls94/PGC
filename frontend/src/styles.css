@@ -130,10 +130,13 @@ details>button{max-width:calc(100% - 32px)}
 .catalog-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 .catalog-grid form{padding:24px;border:1px solid var(--line);border-radius:6px;background:#fafcfb;margin:0}
 .catalog-grid h2{padding-bottom:16px;border-bottom:1px solid var(--line)}
-.document-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:start}
-.document-actions details{flex:1;min-width:200px;margin:0}
-.document-actions>button{margin:0}
-.document-actions>[role=alert]{flex-basis:100%}
+.document-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+.document-actions details{min-width:0;width:100%;margin:0}
+.document-actions>button{margin:0;justify-self:start}
+.document-actions>p{margin:0}
+.document-actions form{grid-template-columns:minmax(0,1fr)}
+.document-actions form>p{margin:0}
+.document-actions form>button{justify-self:start;max-width:100%;white-space:normal;text-align:left}
 footer{padding:22px 32px;background:#f0f3ff;color:var(--muted);font-size:11px;border-top:1px solid #e7eaf3;margin-top:32px}
 .skip-link{position:absolute;top:-80px;left:16px;background:var(--forest);color:white;padding:12px;z-index:20}
 .skip-link:focus{top:10px}
